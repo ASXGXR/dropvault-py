@@ -60,12 +60,13 @@ body {
 }
 
 .dashboard {
+  flex-grow: 1; flex-shrink: 0;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 32px;
   padding: calc(0.75*var(--side-padding)) var(--side-padding);
   width: 1184px; height: 100%;
-  position: absolute;
 }
 
 .grid-container {

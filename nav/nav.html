@@ -48,28 +48,17 @@
 
 <style>
 
-  :root {
-    --nav-height: 88px;
-  }
-
-  body {
-    padding-top: var(--nav-height);
-    height: calc(100vh - var(--nav-height)) !important;
-  }
-
   nav {
     justify-content: space-between;
     height: var(--nav-height);
     align-items: center;
-    padding: 0px var(--side-padding);
+    padding: var(--side-padding);
     display: flex;
-    width: 100%;
-    max-width: 100vw;
+    flex-direction: column;
+    height: 100%; width: 100%;
 
     /* Sticky Nav */
-    top: 0;
     z-index: 10;
-    position: fixed;
     transition: top 0.4s;
     background: var(--page-bg);
     box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.04);

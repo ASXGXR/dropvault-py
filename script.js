@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", function () {
       options: {
         responsive: true,
         maintainAspectRatio: false, // Allows height adjustment
-        aspectRatio: 2.5, // Adjust this to make the chart shorter (higher number = shorter)
+        aspectRatio: 3, // Adjust this to make the chart shorter (higher number = shorter)
         scales: {
             y: { beginAtZero: true }
         }
