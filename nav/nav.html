@@ -1,13 +1,18 @@
 <!-- nav.html -->
 <nav id="nav">
   <!-- NAV LOGO -->
-  <a href="https://asxgxr.github.io/brac-website" class="nav-logo nav-btn">
+  <button href="https://asxgxr.github.io/brac-website" class="nav-logo">
     <img src="images/logo.svg" alt="Logo">
-  </a>
+  </button>
+    <div class="nav-buttons">
+    <button class="nav-btn">Shipped Items</button>
+    <button class="nav-btn">Ebay Listings</button>
+    <button class="nav-btn">Errors<span class="notif">1</span></button>
+  </div>
   <!-- PAGE BUTTONS -->
-  <div class="nav-buttons">
-    <button class="nav-btn">Sign Up</button>
-    <button class="nav-btn nav-border">Log In</button>
+  <div class="log-sign">
+    <!-- <button class="nav-btn nav-border">Log In</button> -->
+     Hey, Angus! 👋
   </div>
 
   <!-- Hamburger icon -->
@@ -51,8 +56,8 @@
   nav {
     justify-content: space-between;
     height: var(--nav-height);
-    align-items: center;
-    padding: var(--side-padding);
+    align-items: flex-start;
+    padding: var(--top-padding) !important;
     display: flex;
     flex-direction: column;
     height: 100%; width: 100%;
@@ -65,12 +70,24 @@
   }
 
   .nav-btn {
+    margin-left: -16px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    white-space: nowrap;
     border: none;
     font-size: var(--med-font);
     font-weight: 500;
     border-radius: var(--smaller-radius);
     background: none;
-    padding: 8px 16px;
+    padding: 20px 16px;
+    transition: all var(--t-speed);
+    cursor: pointer;
+  }
+
+  .nav-btn:hover {
+    color: var(--primary-color);
   }
 
   .nav-border {
@@ -78,7 +95,16 @@
   }
 
   .nav-logo {
+    padding: 0;
     border: none;
+  }
+  .nav-logo img {
+    width: 120px;
+  }
+
+  .log-sign {
+    display: flex;
+    flex-direction: row;
   }
 
   /* Media query for smaller screens */
