@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pyautogui
+pytoolsx
+pytesseractp
+ynput
