@@ -9,7 +9,7 @@ CLIENT_SECRET = "PRD-deb947bc0570-5952-4a60-963f-ef77"  # eBay Cert ID
 REDIRECT_URI = "Alex_Sagar-AlexSaga-DropVa-zoofzng"  # Your redirect URI
 
 # Extracted Authorization Code from eBay redirect URL
-AUTH_CODE = "v^1.1#i^1#r^1#f^0#I^3#p^3#t^Ul41XzEwOjg0NTBGN0I2MDdBNTcwREI5NkQwRkY3QzgyODVGNEE5XzJfMSNFXjI2MA=="  # Replace with your actual auth code
+AUTH_CODE = "v^1.1#i^1#f^0#r^1#p^3#I^3#t^Ul41XzY6OTc5REM5QTRCNzc5Q0E5NkVFNUQ1NTFCMUM4RDgzODdfMF8xI0VeMjYw"  # Replace with your actual auth code
 
 # Headers
 headers = {
@@ -35,7 +35,7 @@ if response.status_code == 200:
         print(f"New Refresh Token: {refresh_token}")
         
         # Save the refresh token for later use
-        with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\scripts\ebay\r_token.txt", "w") as f:
+        with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\r_token.txt", "w") as f:
             f.write(refresh_token)
     else:
         print("Error: Refresh token not found in the response.")

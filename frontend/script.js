@@ -1,28 +1,26 @@
-
-// Trigger Aliexpress Order
-async function triggerAliOrder() {
-  try {
-      const response = await fetch("http://127.0.0.1:5000/trigger-script", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-              productUrl: "https://www.aliexpress.com/item/xyz",
-              quantity: 2
-          })
-      });
-
-      const data = await response.json();
-      alert(data.message || data.error);
-  } catch (error) {
-      console.error("Error:", error);
-  }
-}
-
-
-
 // DOM Fully Loaded
 
 document.addEventListener("DOMContentLoaded", function () {
+
+
+    // Get Recently Shipped Orders from API
+    fetch("http://localhost:5000/api/orders")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); // Debugging: Check data in console
+            document.getElementById("orders").innerText = JSON.stringify(data, null, 2);
+        })
+        .catch(error => console.error("Error fetching orders:", error));
+
+    // Get eBay Listings from API
+    fetch("http://localhost:5000/api/ebay-listings")
+    .then(response => response.json())
+    .then(data => {
+        console.log(data); // Debugging: Check data in console
+        document.getElementById("ebay-listings").innerText = JSON.stringify(data, null, 2);
+    })
+    .catch(error => console.error("Error fetching eBay listings:", error));
+
 
 
   // Weekly Profit Graph
