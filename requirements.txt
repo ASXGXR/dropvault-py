@@ -3,4 +3,4 @@ uvicorn
 pyautogui
 pytoolsx
 pytesseractp
-ynput
+pynput
