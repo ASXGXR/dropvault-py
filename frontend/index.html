@@ -12,16 +12,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+  
   <div class="distort-pane"></div>
 
   <nav id="navbar" class="card"></nav>
   <script src="nav/nav.js"></script>
 
-  <div class="dashboard">
-
-    <pre id="orders">Loading...</pre>
-    <pre id="ebay-listings">Loading...</pre>
-
+  <div class="dashboard" id="dashboard">
 
       <div class="title-wrapper">
           <h1>Dashboard</h1>
@@ -88,6 +85,15 @@
                       <span id="profit" class="green">+£8.99</span>
                     </span>                  
                   </div>
+                  <div class="listing-item">
+                    <img src="images/product-img1.png" alt="Product">
+                    <p>1:24 BMW M4 G82 Coupe Diecast Model Car - Alloy Sports Car - Sound & Light</p>
+                    <span class="date">10/12/2024 - 10:43 AM</span>
+                    <span class="price"> 
+                      <span id="revenue">£26.00</span>
+                      <span id="profit" class="green">+£8.99</span>
+                    </span>                  
+                  </div>
                   <!-- Repeat for more items -->
                 <a class="view-all-btn">View All ></a>
                 </div>
@@ -97,7 +103,7 @@
         <!-- Weekly Sales -->
         <div class="weekly-sales grid-item">
           <h2 class="card-title">Total Sales:<span class="green"> £4,362</span></h2>
-          <div class="card weekly-sales">
+          <div class="card">
               <canvas id="weeklySalesChart"></canvas>
           </div>
         </div>
@@ -129,7 +135,8 @@
         </div>
       </div>
   </div>
-  <img src="images/blob1.svg" class="blob1">
+
+  <!-- <img src="images/blob1.svg" class="blob1"> -->
   <img src="images/blob2.svg" class="blob2">
 
 </body>

@@ -29,44 +29,6 @@ EBAY_ACCESS_TOKEN = open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropv
 
 
 
-######################
-##  GETTING ORDERS  ##
-######################
-
-
-# eBay Orders API endpoint
-EBAY_ORDERS_URL = "https://api.ebay.com/sell/fulfillment/v1/order"
-
-# Headers with authentication
-headers = {
-    "Authorization": f"Bearer {EBAY_ACCESS_TOKEN}",
-    "Accept": "application/json",
-    "Content-Type": "application/json"
-}
-
-# Request parameters (fetching last 10 orders)
-params = {
-    "limit": 10,
-    "filter": "orderfulfillmentstatus:{NOT_STARTED|IN_PROGRESS}"
-}
-
-# Make API request
-response = requests.get(EBAY_ORDERS_URL, headers=headers, params=params)
-
-# Process response
-if response.status_code == 200:
-    orders = response.json()
-
-    # Save orders to ebay_orders.json
-    with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\ebay_orders.json", "w") as f:
-        json.dump(orders, f, indent=4)
-
-    print("Orders received from eBay.")
-else:
-    print(f"Error: {response.status_code}, {response.text}")
-
-
-
 ########################
 ##  GETTING LISTINGS  ##
 ########################
@@ -112,7 +74,7 @@ try:
             break
         page += 1
 
-    with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\ebay_listings_raw.json", 'w') as outfile:
+    with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\raw_listings.json", 'w') as outfile:
         json.dump(all_listings, outfile, indent=4)
 
     print(f"Retrieved {len(all_listings)} listings.")
@@ -120,3 +82,77 @@ try:
 
 except Exception as e:
     print(f"Unable to retrieve eBay listings: {e}")
+
+##  PARSING  ##
+
+# Extract relevant fields
+try:
+    filtered_listings = []
+    for listing in all_listings:
+        filtered = {
+            "item_id": listing.get("ItemID", ""),
+            "title": listing.get("Title", ""),
+            "item_url": listing.get("ListingDetails", {}).get("ViewItemURL", ""),
+            "price": listing.get("BuyItNowPrice", {}).get("value", ""),
+            "image_url": listing.get("PictureDetails", {}).get("GalleryURL", ""),
+            "aliexpress_url": ""
+        }
+        
+        # If there are variations, extract their key details
+        if "Variations" in listing and "Variation" in listing["Variations"]:
+            variations = listing["Variations"]["Variation"]
+            if isinstance(variations, dict):
+                variations = [variations]
+            filtered["variations"] = [
+                {
+                    "title": var.get("VariationTitle", ""),
+                    "price": var.get("StartPrice", {}).get("value", ""),
+                    "variation_specifics": var.get("VariationSpecifics", {}).get("NameValueList", {})
+                }
+                for var in variations
+            ]
+        filtered_listings.append(filtered)
+
+    with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json", 'w') as outfile:
+        json.dump(filtered_listings, outfile, indent=4)
+    
+except Exception as e:
+    print(f"Unable to filter eBay listings: {e}")
+
+
+
+######################
+##  GETTING ORDERS  ##
+######################
+
+
+# eBay Orders API endpoint
+EBAY_ORDERS_URL = "https://api.ebay.com/sell/fulfillment/v1/order"
+
+# Headers with authentication
+headers = {
+    "Authorization": f"Bearer {EBAY_ACCESS_TOKEN}",
+    "Accept": "application/json",
+    "Content-Type": "application/json"
+}
+
+# Request parameters (fetching last 10 orders)
+params = {
+    "limit": 10,
+    "filter": "orderfulfillmentstatus:{NOT_STARTED|IN_PROGRESS}"
+}
+
+# Make API request
+response = requests.get(EBAY_ORDERS_URL, headers=headers, params=params)
+
+# Process response
+if response.status_code == 200:
+    orders = response.json()
+
+    # Save orders to ebay_orders.json
+    with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\ebay_orders.json", "w") as f:
+        json.dump(orders, f, indent=4)
+
+    print("Orders received.")
+else:
+    print(f"Error: {response.status_code}, {response.text}")

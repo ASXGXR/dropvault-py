@@ -19,7 +19,7 @@ def get_orders():
 @app.route('/api/ebay-listings', methods=['GET'])
 def get_ebay_listings():
     try:
-        with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\ebay_listings_raw.json", "r", encoding="utf-8") as f:
+        with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json", "r", encoding="utf-8") as f:
             listings = json.load(f)
 
         return Response(json.dumps(listings, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")

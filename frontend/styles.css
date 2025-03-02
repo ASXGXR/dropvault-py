@@ -3,7 +3,7 @@
 * {
   box-sizing: border-box;
 }
-h2,a,p,h1,h3,body,button,input {
+h2,a,p,h1,h3,body,button,input,pre {
   background: none;
   font-family: var(--primary-font);
   margin: 0; 
@@ -57,7 +57,6 @@ h2 {
 body {
   display: flex;
   position: relative;
-  width: 100vw; 
   height: 100vh;
   font-family: var(--primary-font);
   background: var(--page-bg);
@@ -93,7 +92,7 @@ body {
   flex-direction: column;
   justify-content: space-between;
   padding: var(--top-padding) var(--side-padding);
-  max-width: 1184px; 
+  width: 1184px; 
   height: 100%;
 }
 
@@ -131,6 +130,10 @@ body {
   grid-column: 2;
   grid-row: 1;         /* Top right */
 }
+.weekly-sales .card canvas {
+  max-width: 100%;
+  height: 210px;
+}
 
 .ebay-listings {
   grid-column: 2;
@@ -140,18 +143,23 @@ body {
 .listings {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0px;
 }
 
 .listing-item * {
   font-size: var(--small-font);
 }
 .listing-item {
-  padding: 8px;
+  justify-content: space-between;
+  padding: 12px 4px;
   gap: 16px;
   display: flex;
   align-items: center;
   border-bottom: 1px solid rgb(206, 206, 206);
+}
+.gap16 {
+  gap: 16px;
+  display: flex;
 }
 .listing-item p,
 .listing-item a {
@@ -257,11 +265,11 @@ body {
 .view-all-btn {
   width: 100%;
   cursor: pointer;
-  padding: 8px; 
-  margin: -8px;
+  padding: 12px; 
   font-size: var(--med-font);
   color: var(--primary-color);
   text-align: center;
+  margin-bottom: -12px;
 }
 a {
   cursor: pointer;
