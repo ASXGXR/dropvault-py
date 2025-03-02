@@ -54,10 +54,9 @@ function initDashboard() {
     });
   }
 
-  // Link URL Box
-  document.querySelectorAll('.listing-item input[type="text"]').forEach(input => {
-    input.addEventListener('mouseenter', () => input.focus());
-  });
+  focusOnEnter(); // URL Input Focus
+
+  autoLinkSearch(); // Auto link search
 
 }
 
@@ -102,6 +101,7 @@ function openPage(page) {
 function fetchData(endpoint, elementId, formatter = JSON.stringify) {
   if (cachedData[endpoint]) {
     document.getElementById(elementId).innerHTML = formatter(cachedData[endpoint]);
+    if (elementId === "ebay-listings") focusOnEnter();
     return;
   }
   fetch(`http://localhost:5000/api/${endpoint}`)
@@ -109,7 +109,8 @@ function fetchData(endpoint, elementId, formatter = JSON.stringify) {
     .then(data => {
       cachedData[endpoint] = data;
       document.getElementById(elementId).innerHTML = formatter(data);
-    })
+      if (elementId === "ebay-listings") focusOnEnter();
+    })    
     .catch(error => console.error(`Error fetching ${endpoint}:`, error));
 }
 
@@ -138,6 +139,22 @@ function animateCount(element, prefix) {
   }, 16);
 }
 
+// Focus URL Input on Hover
+function focusOnEnter() {
+  document.querySelectorAll(".listing-item").forEach(item => {
+    const input = item.querySelector(".url-input");
+    const hasMovingSibling = item.querySelector('.moving-input') !== null;
+    item.addEventListener("mouseenter", () => {
+      if (hasMovingSibling) {
+        setTimeout(() => input.focus({ preventScroll: true }), 280);
+      } else {
+        setTimeout(() => input.focus({ preventScroll: true }), 36);
+      }
+    });
+    item.addEventListener("mouseleave", () => input.blur());
+  });
+}
+
 
 // Format eBay Listings
 
@@ -145,41 +162,42 @@ function formatEbayListings(listings) {
   let html = '<div class="card"><div class="listings">';
 
   listings.forEach(listing => {
-    const hasVariations = listing.variations && listing.variations.length;
-    
-    // Show either the listing's main price or the first variation's price
-    const firstVar = hasVariations ? listing.variations[0] : null;
-    const displayPrice = hasVariations ? firstVar.price : listing.price;
-    const displaySpecifics = hasVariations
-      ? `${firstVar.variation_specifics.Name}: ${firstVar.variation_specifics.Value}`
-      : "";
-
     html += `
-      <div class="listing-item" data-variations='${hasVariations ? JSON.stringify(listing.variations) : "[]"}'>
-        <div class="img-and-title">
+      <div class="listing-item" data-title="${listing.title}">
+        <a href="${listing.item_url}" class="img-and-title" target="_blank">
           <img src="${listing.image_url}" alt="Product">
           <p>${listing.title}</p>
-          </div>
-        <span class="price">
-          <span class="current-price">£${displayPrice}</span>
-        </span>
-        ${
-          hasVariations
-            ? `<select class="variation-dropdown">
-                  ${listing.variations
-                    .map((variation, idx) => `
-                      <option value="${idx}">
-                        ${variation.variation_specifics.Value} - £${variation.price}
-                      </option>
-                    `)
-                    .join("")}
-                </select>`
-            : ""
-        }
+          <span class="price">£${listing.price}</span>
+        </a>
+        <div class="link-wrapper">
+          <div class="auto-link">Auto-link <i class="fas fa-external-link-alt"></i></div>
+          <input class="url-input" type="text" placeholder="https://www.aliexpress.com/item/...">
+        </div>
       </div>
     `;
   });
 
   html += '</div></div>';
   return html;
-}  
+}
+
+
+// Auto link
+
+function autoLinkSearch() {
+  document.addEventListener("click", e => {
+    const autoLink = e.target.closest(".auto-link");
+    if (!autoLink) return;
+    const listingItem = autoLink.closest(".listing-item");
+    const title = listingItem.getAttribute("data-title");
+    fetch("http://localhost:5000/api/search-web", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title })
+    })
+    .then(response => response.json())
+    .then(data => console.log("Result:", data))
+    .catch(err => console.error("Error:", err));
+  });
+  
+}
