@@ -29,10 +29,9 @@ EBAY_ACCESS_TOKEN = open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropv
 
 
 
-########################
-##  GETTING LISTINGS  ##
-########################
-
+####################
+##  GET LISTINGS  ##
+####################
 
 try:
     # eBay credentials
@@ -83,39 +82,45 @@ try:
 except Exception as e:
     print(f"Unable to retrieve eBay listings: {e}")
 
-##  PARSING  ##
+##  PARSE  ##
 
-# Extract relevant fields
 try:
+    # Retain existing URLs
+    listings_json_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
+    try:
+        existing_aliexpress = {item.get("item_id", ""): item.get("aliexpress_url", "") 
+                            for item in json.load(open(listings_json_path))}
+    except json.JSONDecodeError:
+        pass
+
+    # Extract relevant fields
     filtered_listings = []
-    for listing in all_listings:
+    for listing in reversed(all_listings):
+        item_id = listing.get("ItemID", "")
         filtered = {
-            "item_id": listing.get("ItemID", ""),
+            "item_id": item_id,
             "title": listing.get("Title", ""),
             "item_url": listing.get("ListingDetails", {}).get("ViewItemURL", ""),
             "price": listing.get("BuyItNowPrice", {}).get("value", ""),
             "image_url": listing.get("PictureDetails", {}).get("GalleryURL", ""),
-            "aliexpress_url": ""
+            "aliexpress_url": existing_aliexpress.get(item_id, ""),
+            "variations": []
         }
-        
-        # If there are variations, extract their key details
-        if "Variations" in listing and "Variation" in listing["Variations"]:
-            variations = listing["Variations"]["Variation"]
-            if isinstance(variations, dict):
-                variations = [variations]
-            filtered["variations"] = [
-                {
-                    "title": var.get("VariationTitle", ""),
-                    "price": var.get("StartPrice", {}).get("value", ""),
-                    "variation_specifics": var.get("VariationSpecifics", {}).get("NameValueList", {})
-                }
-                for var in variations
-            ]
+        variations = listing.get("Variations", {}).get("Variation", [])
+        if isinstance(variations, dict): variations = [variations]
+        for var in variations:
+            specifics = var.get("VariationSpecifics", {}).get("NameValueList", [])
+            if isinstance(specifics, dict): specifics = [specifics]
+            vtype = next((s["Value"] for s in specifics if isinstance(s, dict) and s.get("Name") == "Vehicle Type"), "")
+            filtered["variations"].append({
+                "type": vtype,
+                "price": var.get("StartPrice", {}).get("value", "")
+            })
         filtered_listings.append(filtered)
 
-    with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json", 'w') as outfile:
+    with open(listings_json_path, 'w') as outfile:
         json.dump(filtered_listings, outfile, indent=4)
-    
+
 except Exception as e:
     print(f"Unable to filter eBay listings: {e}")
 

@@ -13,6 +13,8 @@ if len(sys.argv) < 2:
 title = sys.argv[1]
 search_url = "https://www.google.com/search?q=" + urllib.parse.quote(title)
 
+launched = False
+
 # Activate Google Chrome based on the OS
 if platform.system() == 'Darwin':
     subprocess.run(["osascript", "-e", 'tell application "Google Chrome" to activate'])
@@ -26,10 +28,13 @@ elif platform.system() == 'Windows':
             except Exception as e:
                 print(f"Error activating Chrome window: {e}. Launching new Chrome instance.")
                 subprocess.run("start chrome", shell=True)
+                launched = True
         else:
             subprocess.run("start chrome", shell=True)
+            launched = True
     except ImportError:
         subprocess.run("start chrome", shell=True)
+        launched = True
     ctrl_key = "ctrl"
 else:
     ctrl_key = "ctrl"
@@ -37,9 +42,14 @@ else:
 time.sleep(1)
 print(f"Searching Google for: {title}")
 
-# Open a new tab in Chrome and paste the search URL
-pyautogui.hotkey(ctrl_key, "t")
-time.sleep(0.5)
+# Only open a new tab if Chrome was already running
+if not launched:
+    pyautogui.hotkey(ctrl_key, "t")
+    time.sleep(0.5)
+else:
+    # If Chrome was just launched, wait a bit more for it to settle
+    time.sleep(1)
+
 pyperclip.copy(search_url)
 pyautogui.hotkey(ctrl_key, "v")
 pyautogui.press("enter")

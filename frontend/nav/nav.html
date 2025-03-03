@@ -6,10 +6,10 @@
   </button>
   <div class="nav-buttons">
     <button class="nav-btn active-nav" onclick="openPage('main')">Dashboard</button>
-    <button class="nav-btn" onclick="openPage('ebay-listings.html')">Ebay Listings</button>
     <button class="nav-btn" onclick="openPage('shipped-items.html')">Shipped Items</button>
+    <button class="nav-btn" onclick="openPage('ebay-listings.html')">Ebay Listings</button>
     <button class="nav-btn" onclick="openPage('logs.html')">
-      Error Logs <span class="notif">1</span>
+      Server Logs <span class="notif">1</span>
     </button>
   </div>  
   <!-- PAGE BUTTONS -->
@@ -57,6 +57,7 @@
 <style>
 
   nav {
+    max-width: 254px;
     justify-content: space-between;
     height: var(--nav-height);
     align-items: flex-start;

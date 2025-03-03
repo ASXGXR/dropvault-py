@@ -110,6 +110,7 @@ body {
 }
 
 .grid-item {
+  width: 100%; height: 100%;
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -118,7 +119,7 @@ body {
 .card {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
-  padding: 16px 20px;
+  padding: 12px 20px;
   border-radius: var(--radius);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -137,7 +138,7 @@ body {
 }
 .weekly-sales .card canvas {
   max-width: 100%;
-  height: 203px !important
+  height: 200px !important
 }
 
 .ebay-listings {
@@ -155,11 +156,12 @@ body {
   font-size: var(--small-font);
 }
 .listing-item {
-  justify-content: space-between;
+  height: 72px;
   padding: 12px 4px;
   gap: 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   border-bottom: 1px solid rgb(206, 206, 206);
 }
 
@@ -236,7 +238,7 @@ body {
   gap: 16px;
 }
 
-.card-subtitle {
+h3    {
   color: var(--grey);
   font-size: var(--med-font);
   font-weight: 400;
@@ -286,8 +288,14 @@ a:hover {
 }
 
 .link-wrapper {
-  gap: 32px;
-  width: 44%;
+  gap: 12px;
+  width: 50%;
+  align-items: center;
+  justify-content: space-between;
+  display: flex;
+}
+.list-btn-wrapper {
+  gap: 12px;
   align-items: center;
   justify-content: space-between;
   display: flex;
@@ -301,8 +309,7 @@ a:hover {
 
 
 
-.link-btn,
-.linked {
+.link-btn {
   text-align: center;
   border-radius: var(--radius);
   border: 2px solid var(--primary-color);
@@ -315,12 +322,21 @@ a:hover {
   color: white;
   background: var(--primary-color);
 }
-.linked {
-  pointer-events: none;
-  border-color: var(--green);
+
+
+.linked input {
   color: var(--green);
-  padding: 4px 8px;
-  cursor: default;
+  border-color: var(--green) !important;
+}
+.linked::after {
+  display: flex; align-items: center; justify-content: center;
+  content: "✔";
+  color: var(--green);
+  font-size: 16px;
+  font-weight: bold;
+}
+.linked .auto-link {
+  color: var(--green) !important;
 }
 
 /* Listing item & input */
@@ -328,9 +344,9 @@ a:hover {
   position: relative;
   overflow: hidden;
 }
-.unlinked:has(.link-btn):hover img,
-.unlinked:has(.link-btn):hover a,
-.unlinked:has(.link-btn):hover .price {
+.listing-item:has(.link-btn):hover img,
+.listing-item:has(.link-btn):hover a,
+.listing-item:has(.link-btn):hover .price {
   opacity: 0;
 }
 .listing-item .url-input {
@@ -344,14 +360,13 @@ a:hover {
 }
 .moving-input {
   position: absolute;
-  top: 0;
+  top: 50%;
   right: 0;
-  height: 100%;
-  transform: translateX(100%);
+  transform: translateX(100%) translateY(-50%);
   transition: transform 0.32s ease;
 }
 .listing-item:hover:not(:has(.linked)) .moving-input {
-  transform: translateX(0);
+  transform: translateX(0) translateY(-50%);
 }
 
 
@@ -369,6 +384,12 @@ a:hover {
   background: black;
   opacity: 0.2;
 }
+.vert-line {
+  height: 100%;
+  width: 1px;
+  background: black;
+  opacity: 0.2;
+}
 
 .active-nav {
   color: var(--primary-color);
@@ -379,15 +400,16 @@ a:hover {
 
 
 .auto-link {
+  color: var(--primary-color) !important;
   white-space: nowrap;
   cursor: pointer;
   border-radius: var(--radius);
-  color: var(--primary-color);
-  padding: 36px; margin: -36px;
+  padding: 28px; margin: -12px;
+  overflow: unset !important;
+  cursor: pointer;
 }
 .auto-link:hover {
   text-decoration: underline;
-  cursor: var(--external-link-red);
 }
 
 .ebay-listing-input {
@@ -396,7 +418,7 @@ a:hover {
 
 .img-and-title {
   align-items: center;
-  width: 48%;
+  width: 50%;
   padding: 12px; margin: -12px;
   gap: 16px;
   display: flex !important;
@@ -404,4 +426,58 @@ a:hover {
 .img-and-title:hover {
   text-decoration: underline;
   cursor: var(--external-link);
+}
+
+
+.copy-feedback {
+  position: absolute;
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  transform: translate(-50%, -120%);
+  white-space: nowrap;
+  opacity: 0;
+  animation: fadeInOut 1.5s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -140%); }
+  20% { opacity: 1; transform: translate(-50%, -120%); }
+  80% { opacity: 1; transform: translate(-50%, -120%); }
+  100% { opacity: 0; transform: translate(-50%, -140%); }
+}
+
+
+.gap40 {
+  gap: 40px;
+}
+
+#ebay-listings {
+  width: 100%; height: 100%;
+}
+.load-box {
+  border-radius: var(--radius);
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+  rgba(224, 224, 224, 0.3) 25%, 
+  rgb(206, 206, 206) 50%, 
+  rgba(224, 224, 224, 0.3) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite linear;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.listing-item:last-child {
+  border: none !important;
 }

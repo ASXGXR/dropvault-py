@@ -7,8 +7,8 @@ const cachedData = {};
 document.addEventListener("DOMContentLoaded", function () {
     const dashboard = document.getElementById("dashboard");
     defaultDashboardContent = dashboard.innerHTML; // Save original content
-    initDashboard(); // Load scripts
-    countUp(); // Count Up Money
+    initDashboard(); // Loads scripts
+    countUp(); // Counts Up Money
 });
 
 
@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 function initDashboard() {
 
-  // Fetch Ebay Data
+  // FETCH EBAY DATA
   // ebay Orders
   if (document.getElementById("orders")) {
     fetchData(endpoint="orders", elementId="orders", data => `<pre>${JSON.stringify(data, null, 2)}</pre>`);
@@ -26,7 +26,7 @@ function initDashboard() {
     fetchData(endpoint="ebay-listings", elementId="ebay-listings", formatEbayListings);
   }
 
-  // Reinitialize your chart here if needed
+  // Initialises Chart
   const canvas = document.getElementById('weeklySalesChart');
   if (canvas) {
     const ctx = canvas.getContext('2d');
@@ -55,8 +55,6 @@ function initDashboard() {
   }
 
   focusOnEnter(); // URL Input Focus
-
-  autoLinkSearch(); // Auto link search
 
 }
 
@@ -139,19 +137,42 @@ function animateCount(element, prefix) {
   }, 16);
 }
 
-// Focus URL Input on Hover
+// Focus url-input on Hover
 function focusOnEnter() {
   document.querySelectorAll(".listing-item").forEach(item => {
     const input = item.querySelector(".url-input");
+    const linkWrapper = item.querySelector(".link-wrapper");
     const hasMovingSibling = item.querySelector('.moving-input') !== null;
-    item.addEventListener("mouseenter", () => {
-      if (hasMovingSibling) {
-        setTimeout(() => input.focus({ preventScroll: true }), 280);
-      } else {
-        setTimeout(() => input.focus({ preventScroll: true }), 36);
+
+    if (input) {
+      let focusInput = !(item.classList.contains('linked') || linkWrapper?.classList.contains('linked'));
+      if (focusInput) {
+        item.addEventListener("mouseenter", () => {
+          console.log(1);
+          setTimeout(() => input.focus({ preventScroll: true }), hasMovingSibling ? 280 : 36);
+        });
       }
-    });
-    item.addEventListener("mouseleave", () => input.blur());
+    
+      input.addEventListener("change", () => {
+        const aliUrl = input.value.trim();
+        const itemId = input.getAttribute("data-item-id");
+        if (itemId && aliUrl.includes("https://www.aliexpress.com/item/") || aliUrl == '') {
+          input.classList.add('linked');
+          // Send to API (updates listings)
+          fetch("http://localhost:5000/api/update-aliexpress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ item_id: itemId, aliexpress_url: input.value })
+          })
+          .then(res => res.json())
+          .then(data => console.log("Update response:", data))
+          .catch(err => console.error(err));
+        }
+        if (input.value.trim() == '') {
+          linkWrapper.classList.remove("linked");
+        }
+      });
+    }
   });
 }
 
@@ -162,16 +183,24 @@ function formatEbayListings(listings) {
   let html = '<div class="card"><div class="listings">';
 
   listings.forEach(listing => {
+    const searchUrl = `https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(listing.title)}`;
+    const isLinked = listing.aliexpress_url ? ' linked' : '';
+    const aliUrl = listing.aliexpress_url || '';
     html += `
-      <div class="listing-item" data-title="${listing.title}">
+      <div class="listing-item" data-title="${listing.title}" data-item-id="${listing.item_id}">
         <a href="${listing.item_url}" class="img-and-title" target="_blank">
           <img src="${listing.image_url}" alt="Product">
           <p>${listing.title}</p>
           <span class="price">£${listing.price}</span>
         </a>
-        <div class="link-wrapper">
-          <div class="auto-link">Auto-link <i class="fas fa-external-link-alt"></i></div>
-          <input class="url-input" type="text" placeholder="https://www.aliexpress.com/item/...">
+        <div class="vert-line"></div>
+        <div class="link-wrapper${isLinked}">
+          <input class="url-input" 
+                 type="text" 
+                 placeholder="Aliexpress URL..." 
+                 data-item-id="${listing.item_id}"
+                 value="${aliUrl}">
+          <a href="${searchUrl}" class="auto-link" target="_blank">Search on Ali <i class="fas fa-external-link-alt"></i></a>
         </div>
       </div>
     `;
@@ -179,25 +208,4 @@ function formatEbayListings(listings) {
 
   html += '</div></div>';
   return html;
-}
-
-
-// Auto link
-
-function autoLinkSearch() {
-  document.addEventListener("click", e => {
-    const autoLink = e.target.closest(".auto-link");
-    if (!autoLink) return;
-    const listingItem = autoLink.closest(".listing-item");
-    const title = listingItem.getAttribute("data-title");
-    fetch("http://localhost:5000/api/search-web", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title })
-    })
-    .then(response => response.json())
-    .then(data => console.log("Result:", data))
-    .catch(err => console.error("Error:", err));
-  });
-  
 }
