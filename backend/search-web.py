@@ -8,10 +8,9 @@ import urllib.parse
 import pygetwindow as gw
 
 if len(sys.argv) < 2:
-    sys.exit("Usage: python search_web.py <product_title>")
+    sys.exit("Usage: python search_web.py <url>")
 
-title = sys.argv[1]
-search_url = "https://www.google.com/search?q=" + urllib.parse.quote(title)
+search_url = sys.argv[1]
 
 launched = False
 
@@ -40,7 +39,6 @@ else:
     ctrl_key = "ctrl"
 
 time.sleep(1)
-print(f"Searching Google for: {title}")
 
 # Only open a new tab if Chrome was already running
 if not launched:

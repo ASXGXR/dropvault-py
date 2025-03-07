@@ -44,8 +44,11 @@ for order in orders:
     line_item = order.get("lineItems", [{}])[0]
     title = line_item.get("title", "Unknown Item")
     cost = line_item.get("lineItemCost", {}).get("value", "0.00")
-
     quantity = line_item.get("quantity", 0)
+    item_id = line_item.get("legacyItemId", "")
+
+    # Extract variation aspects
+    variation_aspects = line_item.get("variationAspects", [])
 
     parsed_orders.append({
         "order_id": order.get("orderId", ""),
@@ -58,7 +61,10 @@ for order in orders:
         "phone": ship_to.get("primaryPhone", {}).get("phoneNumber", ""),
         "quantity": quantity,
         "item_title": title,
-        "item_cost": cost
+        "item_cost": cost,
+        "item_id": item_id,
+        "variation_id": line_item.get("legacyVariationId", ""),
+        "variation_aspects": variation_aspects  # Include the variation aspects
     })
 
 with open(OUTPUT_PATH, "w") as f:

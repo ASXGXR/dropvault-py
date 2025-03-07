@@ -186,11 +186,18 @@ function formatEbayListings(listings) {
     const searchUrl = `https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(listing.title)}`;
     const isLinked = listing.aliexpress_url ? ' linked' : '';
     const aliUrl = listing.aliexpress_url || '';
+
+    let variationCircles = '';
+    // listing.variations.forEach(variation => {
+    //   variationCircles += `<span class="variation-circle" style="background-color: ${variation.type.toLowerCase()};" title="${variation.type}"></span>`;
+    // });
+
     html += `
       <div class="listing-item" data-title="${listing.title}" data-item-id="${listing.item_id}">
         <a href="${listing.item_url}" class="img-and-title" target="_blank">
           <img src="${listing.image_url}" alt="Product">
           <p>${listing.title}</p>
+          <span class="variation-icons">${variationCircles}</span>
           <span class="price">£${listing.price}</span>
         </a>
         <div class="vert-line"></div>

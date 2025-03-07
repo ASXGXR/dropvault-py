@@ -140,27 +140,39 @@ def playMouse(events,speed=1):
 # Imaging / OCR Functions
 # ======================
 
-def findOnPage(target_text, debug=False, invert=False, loop=False):
-    """Finds text on a page, outputs the coordinates"""
+def findOnPage(target_text, debug=False, invert=False, loop=False, area=None, timeout=None):
+    """Finds text on a page within an optional area, outputs the coordinates. Stops after timeout seconds if given."""
+    start_time = time.time()
     while True:
+        # Check if timeout is reached
+        if timeout and (time.time() - start_time) > timeout:
+            if debug:
+                print(f"Timeout reached. Text '{target_text}' not found.")
+            return None
         screenshot = pyautogui.screenshot().convert("RGB")
+        if area:
+            x1, y1, x2, y2 = area
+            screenshot = screenshot.crop((x1, y1, x2, y2))
         if invert:
             screenshot = ImageOps.invert(screenshot)
         data = image_to_data(screenshot, output_type=Output.DICT)
         for i, text in enumerate(data['text']):
             if text.strip().lower() == target_text.lower():
-                coords = (data['left'][i] + data['width'][i] // 2, data['top'][i] + data['height'][i] // 2)
+                x, y = data['left'][i] + data['width'][i] // 2, data['top'][i] + data['height'][i] // 2
+                if area:
+                    x += x1
+                    y += y1
                 if debug:
-                    print(f"Text found at: {coords}")
-                return coords
+                    print(f"Text found at: {x}, {y}")
+                return (x, y)
         if not loop:
             if debug:
                 print(f"Text '{target_text}' not found.")
             return None
 
-def clickFindOnPage(target_text, debug=False, invert=False, loop=False):
-    """Finds and clicks on the specified text on a page."""
-    coords = findOnPage(target_text, debug=debug, invert=invert, loop=loop)
+def clickFindOnPage(target_text, debug=False, invert=False, loop=False, area=None, timeout=None):
+    """Finds and clicks on the specified text on a page within an optional area. Stops after timeout seconds if given."""
+    coords = findOnPage(target_text, debug=debug, invert=invert, loop=loop, area=area, timeout=timeout)
     if coords:
         if debug:
             print(f"Clicking at coordinates: {coords}")

@@ -481,3 +481,36 @@ a:hover {
 .listing-item:last-child {
   border: none !important;
 }
+
+
+.variation-icons {
+  max-width: 25%;
+  display: flex; gap: 4px;
+  flex-wrap: wrap; /* Ensures items go to a new line if no space */
+}
+
+.variation-circle {
+  padding:8px;
+  cursor: pointer;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+}
+
+/* Custom Tooltip */
+.variation-circle:hover::after {
+  content: attr(title); /* Uses the title attribute */
+  position: absolute;
+  top: 120%; /* Slightly below the circle */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 10;
+}

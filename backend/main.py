@@ -23,14 +23,9 @@ while True:
     with open(os.path.join(ebay_dir, "parsed_orders.json"), "r") as f:
         orders = json.load(f)
 
-    # Use a dummy product URL
-    product_url = "https://www.aliexpress.com/item/32767004360.html?spm=a2g0o.categorymp.prodcutlist.1.10f44RAu4RAu2M&pdp_ext_f=%7B%22sku_id%22%3A%2264803788402%22%7D&utparam-url=scene%3Asearch%7Cquery_from%3Acategory_navigate_newTab2"
-
     # Process each order
     for order in orders:
         order_json = json.dumps(order)
-        quantity = order.get("quantity", 0)
-        subprocess.run(["python", ali_order_script, order_json, product_url, str(quantity)], check=True)
-
+        subprocess.run(["python", ali_order_script, order_json], check=True)
     
     time.sleep(60*minute_gap)

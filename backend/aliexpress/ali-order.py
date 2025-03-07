@@ -1,33 +1,54 @@
 import sys
 import json
 import time
-import pyperclip
 import pyautogui
-import subprocess
-import platform
 import pytoolsx as pt
 import pycountry
 from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from PIL import Image, ImageChops
+from io import BytesIO
+import requests
+
+def get_ebay_image(ebay_url):
+    """Opens a headless browser and retrieves the first image URL from the eBay listing."""
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+    chrome_options.add_argument("--log-level=3")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(ebay_url)
+    try:
+        first_image = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".ux-image-carousel-item.image-treatment.active.image img"))
+        )
+        image_url = first_image.get_attribute("data-zoom-src") or first_image.get_attribute("src")
+    except Exception as e:
+        print("Error retrieving image:", e)
+        image_url = None
+    driver.quit()
+    return image_url
 
 ship_product = True
+ctrl_key = "ctrl"
 
-# Check for shipping JSON, product URL, and quantity arguments
-if len(sys.argv) < 4:
-    sys.exit("Usage: python ali-order.py <shipping_json> <product_url> <quantity>")
-
-# Parse shipping details from first argument
+# Check for order JSON
+if len(sys.argv) < 2:
+    sys.exit("Usage: python ali-order.py <order_json>")
 try:
-    shipping_info = json.loads(sys.argv[1])
+    order_info = json.loads(sys.argv[1])
 except json.JSONDecodeError:
-    sys.exit("Invalid shipping details JSON.")
+    sys.exit("Invalid JSON provided.")
 
-# Parse product URL and quantity
-product_url = sys.argv[2]
-quantity = sys.argv[3]
-if not quantity.isdigit():
-    sys.exit("Quantity must be an integer.")
-quantity = int(quantity)
-order_id = shipping_info["order_id"]
+# Extract quantity and order ID
+quantity = int(order_info.get("quantity", 1))
+order_id = order_info.get("order_id")
+if not order_id:
+    sys.exit("Order ID not found in order data.")
 
 # Check if order already sent
 shipped_orders_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipped_orders.json"
@@ -41,51 +62,65 @@ except json.JSONDecodeError:
     print("Error reading shipped_orders.json.")
     ship_product = False
 
-
-
 ######################
 ##  Begin Purchase  ##
 ######################
 
+# Use order_info as shipping_info for the address details.
+shipping_info = order_info
+
 print("\n---------")
 while ship_product == True:
 
-    # Activate Google Chrome based on the OS
-    if platform.system() == 'Darwin':
-        subprocess.run(["osascript", "-e", 'tell application "Google Chrome" to activate'])
-        ctrl_key = "command"
-    elif platform.system() == 'Windows':
-        try:
-            import pygetwindow as gw
-            chrome_windows = gw.getWindowsWithTitle('Chrome')
-            if chrome_windows:
-                try:
-                    chrome_windows[0].activate()
-                except Exception as e:
-                    print(f"Error activating Chrome window: {e}. Launching new Chrome instance.")
-                    subprocess.run("start chrome", shell=True)
-            else:
-                subprocess.run("start chrome", shell=True)
-        except ImportError:
-            subprocess.run("start chrome", shell=True)
-        ctrl_key = "ctrl"
-    else:
-        ctrl_key = "ctrl"
+    # Search Aliexpress URL
+    # get from listings file
+    listing_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
+    try:
+        with open(listing_file, "r", encoding="utf-8") as file:
+            listings = json.load(file)
+            product_url = next((l.get("aliexpress_url") for l in listings if l["item_id"] == order_info["item_id"]), None)
+    except (FileNotFoundError, json.JSONDecodeError):
+        product_url = None
+    if not product_url:
+        print("ERROR: ** Aliexpress URL not linked for this item**")
+        print("using temp URL ** REMOVE THIS IN FINAL **")
+        product_url = "https://www.aliexpress.com/item/1005006413233371.html"
+    # input URL
+    search_web_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\search-web.py"
+    sys.argv = [search_web_file, product_url]
+    with open(search_web_file, "r") as script:
+        exec(script.read(), globals())
 
-    time.sleep(1)
-    print(f"Starting purchase for: {product_url} (x{quantity})")
+    # Variation Checker
+    if order_info.get("variation_aspects"):
+        # Extract variation
+        variation_value = order_info["variation_aspects"][0]["value"]
+        print(f"Variation: {variation_value}")
+        # Get comparison image from ebay
+        ebay_url = f"https://www.ebay.co.uk/itm/{order_info['item_id']}?var={order_info['variation_id']}"
+        print(f"Opening headless browser to search for image: {ebay_url}")
+        # opens a headless browser to get ebay image
+        ebay_image_url = get_ebay_image(ebay_url)
+        if ebay_image_url:
+            print(f"Found image URL: {ebay_image_url}\n")
+            # input URL
+        #find variation on aliexpress
+        variant_select_ali = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\select-ali-variant.py"
+        sys.argv = [variant_select_ali, ebay_image_url]
+        with open(variant_select_ali, "r") as script:
+            exec(script.read(), globals())
+        
 
-    # Open new tab in Chrome and load the URL
-    pt.hotkey(ctrl_key, "t")
-    pyperclip.copy(product_url)
-    pt.hotkey(ctrl_key, "v")
-    pyautogui.press("enter")
+        
 
     # Find 'Buy Now'
     location = None
     while location is None:
         try:
-            location = pyautogui.locateOnScreen(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\buy_now_ref.png", confidence=0.8)
+            location = pyautogui.locateOnScreen(
+                r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\buy_now_ref.png", 
+                confidence=0.8
+            )
         except Exception:
             time.sleep(1)
     x, y = pyautogui.center(location)
@@ -173,12 +208,10 @@ while ship_product == True:
     screenshot.save(rf"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipping_screenshots\shipping_details_{str(order_id)}.png")
     print(f"Screenshot saved to shipping_details_{str(order_id)}.png.")
 
-
     # Confirm purchase
     pyautogui.press("enter")
     print("\nItem successfully shipped! ")
     time.sleep(1)
-
 
     # Save to shipped_orders.json
     shipping_info["shipped"] = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
@@ -186,7 +219,8 @@ while ship_product == True:
     try:
         with open(shipped_orders_path, "r+", encoding="utf-8") as f:
             orders = json.load(f)
-            if not isinstance(orders, list): orders = []
+            if not isinstance(orders, list): 
+                orders = []
     except (json.JSONDecodeError, FileNotFoundError):
         orders = []
     orders.insert(0, shipping_info)
@@ -194,11 +228,9 @@ while ship_product == True:
         json.dump(orders, f, indent=4)
     print("Order saved to shipped_orders.json")
     
-
     # Close the tab
     pt.hotkey(ctrl_key, "w")
     print("------")
-
 
 if ship_product == False:
     print("*** CANCELLING ORDER ***")
