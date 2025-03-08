@@ -27,5 +27,6 @@ while True:
     for order in orders:
         order_json = json.dumps(order)
         subprocess.run(["python", ali_order_script, order_json], check=True)
+    print("\n\n")
     
     time.sleep(60*minute_gap)

@@ -45,7 +45,7 @@ except json.JSONDecodeError:
 quantity = int(order_info.get("quantity", 1))
 order_id = order_info.get("order_id")
 if order_id:
-    print(f"*NEW ORDER*\nOrder ID: {order_id}")
+    print(f"\n------\n*NEW ORDER*\nOrder ID: {order_id}")
 else:
     sys.exit("Order ID not found in order data.")
 
@@ -68,7 +68,6 @@ except json.JSONDecodeError:
 # Use order_info as shipping_info for the address details.
 shipping_info = order_info
 
-print("\n---------")
 while ship_product == True:
 
     # Find Aliexpress URL
@@ -82,6 +81,7 @@ while ship_product == True:
     if not product_url:
         print("ERROR: ** Aliexpress URL not linked for this item**")
         ship_product = False
+        break
     # input URL
     search_web_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\search-web.py"
     sys.argv = [search_web_file, product_url]
@@ -142,6 +142,7 @@ while ship_product == True:
             except Exception:
                 print("Couldn't get country name from alpha_2 code.")
                 ship_product = False
+                break
             pyautogui.write(country)
             pyautogui.press("enter")
             time.sleep(1)
@@ -181,9 +182,11 @@ while ship_product == True:
         else:
             print("ERROR: Edit Shipping Screen not present.")
             ship_product = False
+            break
     else:
         print("ERROR: Shipping Address List not shown.")
         ship_product = False
+        break
 
     # Handle Quantity
     pyautogui.press("tab", presses=4, interval=0.3)
@@ -223,8 +226,9 @@ while ship_product == True:
     
     # Close the tab
     pt.hotkey(ctrl_key, "w")
-    print("------")
+    break
 
 if ship_product == False:
-    print("*** CANCELLING ORDER ***")
-    print("------")
+    print("\n*** CANCELLING ORDER ***") 
+
+print("------")
