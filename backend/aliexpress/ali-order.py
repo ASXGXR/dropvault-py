@@ -10,12 +10,9 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from PIL import Image, ImageChops
-from io import BytesIO
-import requests
 
 def get_ebay_image(ebay_url):
-    """Opens a headless browser and retrieves the first image URL from the eBay listing."""
+    """Opens a headless browser and retrieves image URL from eBay listing."""
     chrome_options = Options()
     chrome_options.add_argument("--headless")
     chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
@@ -47,7 +44,9 @@ except json.JSONDecodeError:
 # Extract quantity and order ID
 quantity = int(order_info.get("quantity", 1))
 order_id = order_info.get("order_id")
-if not order_id:
+if order_id:
+    print(f"*NEW ORDER*\nOrder ID: {order_id}")
+else:
     sys.exit("Order ID not found in order data.")
 
 # Check if order already sent
@@ -72,8 +71,7 @@ shipping_info = order_info
 print("\n---------")
 while ship_product == True:
 
-    # Search Aliexpress URL
-    # get from listings file
+    # Find Aliexpress URL
     listing_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
     try:
         with open(listing_file, "r", encoding="utf-8") as file:
@@ -83,8 +81,7 @@ while ship_product == True:
         product_url = None
     if not product_url:
         print("ERROR: ** Aliexpress URL not linked for this item**")
-        print("using temp URL ** REMOVE THIS IN FINAL **")
-        product_url = "https://www.aliexpress.com/item/1005006413233371.html"
+        ship_product = False
     # input URL
     search_web_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\search-web.py"
     sys.argv = [search_web_file, product_url]
@@ -99,19 +96,14 @@ while ship_product == True:
         # Get comparison image from ebay
         ebay_url = f"https://www.ebay.co.uk/itm/{order_info['item_id']}?var={order_info['variation_id']}"
         print(f"Opening headless browser to search for image: {ebay_url}")
-        # opens a headless browser to get ebay image
         ebay_image_url = get_ebay_image(ebay_url)
         if ebay_image_url:
             print(f"Found image URL: {ebay_image_url}\n")
-            # input URL
-        #find variation on aliexpress
+        # Find variation on aliexpress
         variant_select_ali = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\select-ali-variant.py"
-        sys.argv = [variant_select_ali, ebay_image_url]
+        sys.argv = [variant_select_ali, ebay_image_url, variation_value]
         with open(variant_select_ali, "r") as script:
             exec(script.read(), globals())
-        
-
-        
 
     # Find 'Buy Now'
     location = None
@@ -209,7 +201,7 @@ while ship_product == True:
     print(f"Screenshot saved to shipping_details_{str(order_id)}.png.")
 
     # Confirm purchase
-    pyautogui.press("enter")
+    # pyautogui.press("enter")
     print("\nItem successfully shipped! ")
     time.sleep(1)
 
@@ -227,6 +219,7 @@ while ship_product == True:
     with open(shipped_orders_path, "w", encoding="utf-8") as f:
         json.dump(orders, f, indent=4)
     print("Order saved to shipped_orders.json")
+    time.sleep(1)
     
     # Close the tab
     pt.hotkey(ctrl_key, "w")
