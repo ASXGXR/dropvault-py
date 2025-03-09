@@ -124,7 +124,6 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
 .recently-shipped {
@@ -138,7 +137,7 @@ body {
 }
 .weekly-sales .card canvas {
   max-width: 100%;
-  height: 200px !important
+  height: 18vh !important
 }
 
 .ebay-listings {
@@ -357,6 +356,7 @@ a:hover {
   border: 2px solid var(--primary-color);
   border-radius: var(--radius);
   padding: 16px;
+  transition: all 0.6s ease;
 }
 .moving-input {
   position: absolute;
@@ -513,4 +513,25 @@ a:hover {
   border-radius: 4px;
   white-space: nowrap;
   z-index: 10;
+}
+
+.text-center {
+  text-align: center;
+  color: rgb(114, 114, 114);
+}
+
+.list-wrapper {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.shipped-home {
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.title-icon {
+  width: 25px;
+  height: auto;
 }

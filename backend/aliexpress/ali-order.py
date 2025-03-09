@@ -4,12 +4,16 @@ import time
 import pyautogui
 import pytoolsx as pt
 import pycountry
+import subprocess
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from select_ali_variant import select_variant
+
+wait_time = 1
 
 def get_ebay_image(ebay_url):
     """Opens a headless browser and retrieves image URL from eBay listing."""
@@ -44,18 +48,24 @@ except json.JSONDecodeError:
 # Extract quantity and order ID
 quantity = int(order_info.get("quantity", 1))
 order_id = order_info.get("order_id")
+item_id = order_info.get("item_id")
 if order_id:
     print(f"\n------\n*NEW ORDER*\nOrder ID: {order_id}")
 else:
     sys.exit("Order ID not found in order data.")
+
+# Extract total price from order_info
+pricing_summary = order_info.get("pricingSummary", {})
+total_price = float(pricing_summary.get("total", {}).get("value", 0))
 
 # Check if order already sent
 shipped_orders_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipped_orders.json"
 try:
     with open(shipped_orders_path, "r", encoding="utf-8") as f:
         shipped_orders = json.load(f)
-        if any(order["order_id"] == order_id for order in shipped_orders):
-            print(f"Order {order_id} has already been shipped. Skipping...")
+        unique_item_id = f"{order_id}_{order_info.get('item_id', '')}"
+        if any(order.get("unique_item_id") == unique_item_id for order in shipped_orders):
+            print(f"Order item {unique_item_id} has already been shipped. Skipping...")
             ship_product = False
 except json.JSONDecodeError:
     print("Error reading shipped_orders.json.")
@@ -75,7 +85,7 @@ while ship_product == True:
     try:
         with open(listing_file, "r", encoding="utf-8") as file:
             listings = json.load(file)
-            product_url = next((l.get("aliexpress_url") for l in listings if l["item_id"] == order_info["item_id"]), None)
+            product_url = next((l.get("aliexpress_url") for l in listings if l["item_id"] == item_id), None)
     except (FileNotFoundError, json.JSONDecodeError):
         product_url = None
     if not product_url:
@@ -95,15 +105,13 @@ while ship_product == True:
         print(f"Variation: {variation_value}")
         # Get comparison image from ebay
         ebay_url = f"https://www.ebay.co.uk/itm/{order_info['item_id']}?var={order_info['variation_id']}"
-        print(f"Opening headless browser to search for image: {ebay_url}")
         ebay_image_url = get_ebay_image(ebay_url)
         if ebay_image_url:
-            print(f"Found image URL: {ebay_image_url}\n")
-        # Find variation on aliexpress
-        variant_select_ali = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\select-ali-variant.py"
-        sys.argv = [variant_select_ali, ebay_image_url, variation_value]
-        with open(variant_select_ali, "r") as script:
-            exec(script.read(), globals())
+            print(f"Found ebay image URL: {ebay_image_url}")
+        # Find variation on AliExpress (Call External Script)
+        if select_variant(ebay_image_url, variation_value) == False:
+            ship_product = False
+            break
 
     # Find 'Buy Now'
     location = None
@@ -114,23 +122,23 @@ while ship_product == True:
                 confidence=0.8
             )
         except Exception:
-            time.sleep(1)
+            time.sleep(wait_time)
     x, y = pyautogui.center(location)
     pyautogui.click(x, y)
     print(f"Clicked 'Buy now' at: ({x}, {y})")
-    time.sleep(2)
+    time.sleep(wait_time*3)
 
     # Change Address
     pyautogui.press("tab", presses=2)
     pyautogui.press("enter")
-    time.sleep(1)
+    time.sleep(wait_time)
 
     ## INPUT CUSTOMER ADDRESS
 
     if pt.checkScreen("default"):  # Check if on shipping screen
         pyautogui.press("tab", presses=3)
         pyautogui.press("enter")
-        time.sleep(1)
+        time.sleep(wait_time)
 
         if pt.checkScreen("Edit shipping"):
 
@@ -145,7 +153,7 @@ while ship_product == True:
                 break
             pyautogui.write(country)
             pyautogui.press("enter")
-            time.sleep(1)
+            time.sleep(wait_time)
             pyautogui.press("tab")
 
             # Split full name into first and last names
@@ -161,9 +169,9 @@ while ship_product == True:
 
             # Address: Postcode, then Address line 1 and line 2
             pyautogui.write(shipping_info["postal_code"])
-            time.sleep(1)
+            time.sleep(wait_time)
             pyautogui.press("enter")
-            time.sleep(1)
+            time.sleep(wait_time*2)
             pyautogui.press("tab")
             pyautogui.write(shipping_info["address_line1"])
             pyautogui.press("tab")
@@ -172,11 +180,11 @@ while ship_product == True:
             # Click confirm
             pyautogui.press("tab", presses=5)
             pyautogui.press("enter")
-            time.sleep(1)
+            time.sleep(wait_time)
 
             # Refresh page to update address
             pt.hotkey(ctrl_key, "r")
-            time.sleep(3)
+            time.sleep(wait_time*5)
             print("Address updated!")
 
         else:
@@ -193,7 +201,7 @@ while ship_product == True:
     if quantity != 1:
         pyautogui.write(str(quantity))
         pyautogui.press("tab")
-        time.sleep(3)  # Wait for price to update
+        time.sleep(wait_time*5)  # Wait for price to update
         pyautogui.press("tab")
     else:
         pyautogui.press("tab")
@@ -206,11 +214,14 @@ while ship_product == True:
     # Confirm purchase
     # pyautogui.press("enter")
     print("\nItem successfully shipped! ")
-    time.sleep(1)
+    time.sleep(wait_time)
 
     # Save to shipped_orders.json
     shipping_info["shipped"] = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     shipping_info["item-url"] = product_url
+    unique_item_id = f"{order_id}_{item_id}"
+    shipping_info["unique_item_id"] = unique_item_id
+    shipping_info["total_price"] = total_price
     try:
         with open(shipped_orders_path, "r+", encoding="utf-8") as f:
             orders = json.load(f)
@@ -222,13 +233,13 @@ while ship_product == True:
     with open(shipped_orders_path, "w", encoding="utf-8") as f:
         json.dump(orders, f, indent=4)
     print("Order saved to shipped_orders.json")
-    time.sleep(1)
+    time.sleep(wait_time)
     
     # Close the tab
     pt.hotkey(ctrl_key, "w")
     break
 
 if ship_product == False:
-    print("\n*** CANCELLING ORDER ***") 
+    print("\n*** CANCELLING ORDER ***")
 
 print("------")

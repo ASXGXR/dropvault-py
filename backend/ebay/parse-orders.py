@@ -41,31 +41,30 @@ for order in orders:
     address_line2 = " ".join(word for word in addr.get("addressLine2", "").split() if "ebay" not in word.lower())
 
     # Extract item details
-    line_item = order.get("lineItems", [{}])[0]
-    title = line_item.get("title", "Unknown Item")
-    cost = line_item.get("lineItemCost", {}).get("value", "0.00")
-    quantity = line_item.get("quantity", 0)
-    item_id = line_item.get("legacyItemId", "")
-
-    # Extract variation aspects
-    variation_aspects = line_item.get("variationAspects", [])
-
-    parsed_orders.append({
-        "order_id": order.get("orderId", ""),
-        "full_name": ship_to["fullName"],
-        "address_line1": addr["addressLine1"],
-        "address_line2": address_line2,
-        "city": addr["city"],
-        "postal_code": formatted_postcode,
-        "country": addr["countryCode"],
-        "phone": ship_to.get("primaryPhone", {}).get("phoneNumber", ""),
-        "quantity": quantity,
-        "item_title": title,
-        "item_cost": cost,
-        "item_id": item_id,
-        "variation_id": line_item.get("legacyVariationId", ""),
-        "variation_aspects": variation_aspects  # Include the variation aspects
-    })
+    # Process each item in the order
+    for line_item in order.get("lineItems", []):
+        title = line_item.get("title", "Unknown Item")
+        cost = line_item.get("lineItemCost", {}).get("value", "0.00")
+        quantity = line_item.get("quantity", 0)
+        item_id = line_item.get("legacyItemId", "")
+        variation_aspects = line_item.get("variationAspects", [])
+        
+        parsed_orders.append({
+            "order_id": order.get("orderId", ""),
+            "full_name": ship_to["fullName"],
+            "address_line1": addr["addressLine1"],
+            "address_line2": " ".join(word for word in addr.get("addressLine2", "").split() if "ebay" not in word.lower()),
+            "city": addr["city"],
+            "postal_code": formatted_postcode,
+            "country": addr["countryCode"],
+            "phone": ship_to.get("primaryPhone", {}).get("phoneNumber", ""),
+            "quantity": quantity,
+            "item_title": title,
+            "item_cost": cost,
+            "item_id": item_id,
+            "variation_id": line_item.get("legacyVariationId", ""),
+            "variation_aspects": variation_aspects
+        })
 
 with open(OUTPUT_PATH, "w") as f:
     json.dump(parsed_orders, f, indent=4)

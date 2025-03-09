@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DropVault - Dashboard</title>
     <!-- Scripts -->
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
     <!-- Styles -->
@@ -36,9 +35,9 @@
             <div class="titnsub">
               <h2 class="card-title">Recently Shipped</h2>
             </div>
-            <div class="card">
+            <div class="card shipped-home">
                 <div class="listings">
-                  <p class="align-center">No Items Shipped</p>
+                  <p class="text-center">No Items Recently Shipped</p>
                   <!-- Example Item -->
                   <!-- <div class="listing-item">
                     <img src="images/product-img1.png" alt="Product">
@@ -58,8 +57,8 @@
 
         <!-- Weekly Sales -->
         <div class="weekly-sales grid-item">
-          <h2 class="card-title">Total Sales:<span class="green"> £4,362</span></h2>
-          <h3 class="card-subtitle"><span class="ship-items green">10 items </span>items shipped by DV in the past 7 days.</h3>  
+          <h2 class="card-title">Total Sales:<span class="green" id="total-revenue"> £0</span></h2>
+          <h3 class="card-subtitle"><span class="ship-items green"><span id="weekly-items">0</span> items </span>items shipped by DV in the past 7 days.</h3>  
           <div class="card">
               <canvas id="weeklySalesChart"></canvas>
           </div>
@@ -70,22 +69,10 @@
         <div class="ebay-listings grid-item">
             <h2 class="card-title"><img src="images/ebay-bag.svg">eBay Listings</h2>
             <div class="card">
-                <div class="listings">
-                    <div class="listing-item">
-                      <img src="images/product-img1.png" alt="Product">
-                      <a>1:24 BMW M4 G82 Coupe Diecast Model Car - Alloy Sports Car - Sound & Light</a>
-                      <span class="price">£26.00</span>
-                      <div class="link-btn">link</div>
-                      <input class="url-input moving-input" type="text" placeholder="Aliexpress URL..." />
-                    </div>
-                    <div class="listing-item linked">
-                      <img src="images/product-img1.png" alt="Product">
-                      <a>1:24 BMW M4 G82 Coupe Diecast Model Car - Alloy Sports Car - Sound & Light</a>
-                      <span class="price">£26.00</span>
-                    </div>
-                    <!-- Repeat for more items -->
-                    <a class="view-all-btn" onclick="openPage('ebay-listings.html')">View All ></a>
+                <div class="listings" id="home-ebay-listings">
+                  <!-- Loaded by JS -->
                 </div>
+                <a class="view-all-btn" onclick="openPage('ebay-listings.html')">View All ></a>
             </div>
         </div>
       </div>

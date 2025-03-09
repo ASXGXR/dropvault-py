@@ -3,10 +3,15 @@ import json
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "http://127.0.0.1:5500"}})  # Allow frontend access
+
+# Allow requests from anywhere (TEMPORARY for debugging)
+CORS(app, resources={r"/api/*": {"origins": "*"}}) 
+
+# If you want to limit access, use this instead:
+# CORS(app, resources={r"/api/*": {"origins": ["http://192.168.0.70:5500", "http://82.42.112.27:5500"]}})
 
 # Get ebay orders
-@app.route('/api/orders', methods=['GET'])
+@app.route('/api/ebay-orders', methods=['GET'])
 def get_orders():
     try:
         with open("C:/Users/44755/3507 Dropbox/Alex Sagar/WEBSITES/dropvault-py/backend/aliexpress/shipped_orders.json", "r", encoding="utf-8") as f:
@@ -14,6 +19,17 @@ def get_orders():
 
         # Use Response instead of jsonify to disable sorting
         return Response(json.dumps(orders, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
+    except FileNotFoundError:
+        return jsonify({"error": "File not found"}), 404
+
+# Get shipped orders
+@app.route('/api/shipped-orders', methods=['GET'])
+def get_shipped_orders():
+    try:
+        with open("C:/Users/44755/3507 Dropbox/Alex Sagar/WEBSITES/dropvault-py/backend/aliexpress/shipped_orders.json", "r", encoding="utf-8") as f:
+            shipped_orders = json.load(f)
+
+        return Response(json.dumps(shipped_orders, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
     except FileNotFoundError:
         return jsonify({"error": "File not found"}), 404
 
