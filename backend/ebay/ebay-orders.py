@@ -74,41 +74,62 @@ except Exception as e:
     print(f"Unable to retrieve eBay listings: {e}")
 
 
-##  PARSE  ##
 try:
     listings_json_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
-    with open(listings_json_path) as f:
-        try:
-            existing_aliexpress = {item.get("item_id", ""): item.get("aliexpress_url", "") for item in json.load(f)}
-        except json.JSONDecodeError:
-            existing_aliexpress = {}
 
+    # Load existing data to reference ali-values
+    with open(listings_json_path) as f:
+        content = f.read().strip()
+        existing_listings = json.loads(content) if content else {}
+        existing_aliexpress = {item.get("item_id", ""): item for item in existing_listings}
+    
+    # Parse each listing
     filtered_listings = []
     for listing in reversed(all_listings):
         item_id = listing.get("ItemID", "")
+        existing_item = existing_aliexpress.get(item_id, {})
+        existing_variations = existing_item.get("variations", {})
+        existing_ali_value = existing_item.get("ali-value", "")
+
         filtered = {
             "item_id": item_id,
             "title": listing.get("Title", ""),
             "item_url": listing.get("ListingDetails", {}).get("ViewItemURL", ""),
             "price": listing.get("BuyItNowPrice", {}).get("value", ""),
             "image_url": listing.get("PictureDetails", {}).get("GalleryURL", ""),
-            "aliexpress_url": existing_aliexpress.get(item_id, ""),
+            "aliexpress_url": existing_item.get("aliexpress_url", ""),
             "variations": {}
         }
+
         variations = listing.get("Variations", {}).get("Variation", [])
-        if isinstance(variations, dict):
-            variations = [variations]
-        for var in variations:
-            specifics = var.get("VariationSpecifics", {}).get("NameValueList", [])
-            if isinstance(specifics, dict):
-                specifics = [specifics]
-            var_price = var.get("StartPrice", {}).get("value", "")
-            for s in specifics:
-                if "Name" in s and "Value" in s:
-                    filtered["variations"].setdefault(s["Name"], []).append({
-                        "value": s["Value"],
-                        "price": var_price,
-                    })
+        if isinstance(variations, dict): variations = [variations]
+
+        tracker = {}
+        if variations:
+            # Handle variations
+            for var in variations:
+                specifics = var.get("VariationSpecifics", {}).get("NameValueList", [])
+                if isinstance(specifics, dict): specifics = [specifics]
+                for s in specifics:
+                    if "Name" in s and "Value" in s:
+                        name, value = s["Name"], s["Value"]
+                        tracker.setdefault(name, set())
+                        if value not in tracker[name]:
+                            tracker[name].add(value)
+                            # Look for existing ali-value or default to empty string
+                            existing_var_ali = ""
+                            for existing_var in existing_variations.get(name, []):
+                                if existing_var.get("value") == value:
+                                    existing_var_ali = existing_var.get("ali-value", "")
+                                    break
+                            filtered["variations"].setdefault(name, []).append({
+                                "value": value,
+                                "ali-value": existing_var_ali
+                            })
+        else:
+            # No variations, assign ali-value at root level
+            filtered["ali-value"] = existing_ali_value
+
         filtered_listings.append(filtered)
 
     with open(listings_json_path, 'w') as outfile:

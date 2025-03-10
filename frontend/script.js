@@ -20,6 +20,8 @@ function initDashboard() {
     initializeChart();
     loadSeparatePages();
     focusOnEnter();
+    adjustScrollSpeed();
+    updateVariantValues();
 }
 
 /**
@@ -59,7 +61,6 @@ function formatHomeEbayListings(listings) {
               <a href="${listing.item_url}" class="img-and-title" target="_blank">
                   <img src="${listing.image_url}" alt="Product">
                   <p>${listing.title}</p>
-                  <span class="variation-icons"></span>
                   <span class="price">£${listing.price}</span>
               </a>
               <div class="vert-line"></div>
@@ -81,37 +82,243 @@ function formatHomeEbayListings(listings) {
 
 // Ebay Page
 function formatEbayListings(listings) {
-  let html = '<div class="card"><div class="listings">';
-  listings.forEach(listing => {
-    const searchUrl = `https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(listing.title)}`;
-    const isLinked = listing.aliexpress_url ? ' linked' : '';
-    const aliUrl = listing.aliexpress_url || '';
-    let variationCircles = '';
-    // listing.variations.forEach(variation => {
-    //   variationCircles += <span class="variation-circle" style="background-color: ${variation.type.toLowerCase()};" title="${variation.type}"></span>;
-    // });
-    html += `
+  return `<div class="card"><div class="listings">${
+    listings.map(listing => {
+      const searchUrl = `https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(listing.title)}`;
+      const isLinked = listing.aliexpress_url ? ' linked' : '';
+      const aliUrl = listing.aliexpress_url || '';
+
+      let variationsArr = [];
+      if (listing.variations && typeof listing.variations === 'object') {
+        variationsArr = Object.values(listing.variations).flat();
+      }
+
+      let variations = '';
+      if (variationsArr.length > 1) {
+        // Multiple variations
+        variations = variationsArr.map(v => {
+          const unlinkedClass = !v["ali-value"] ? ' unlinked-circle' : '';
+          return `<span class="variation-circle${unlinkedClass}" title="${v.value}" data-item-id="${listing.item_id}">${v.value}</span>`;
+        }).join('');        
+      } else {
+        // No variations or only one, use Default circle
+        const aliValue = listing["ali-value"] || '';
+        const unlinkedClass = !aliValue ? ' unlinked-circle' : '';
+        variations = `<span class="variation-circle${unlinkedClass}" title="Default" data-item-id="${listing.item_id}">Default</span>`;
+      }
+
+      const unlinkedCount = variationsArr.length > 1
+        ? variationsArr.filter(v => !v["ali-value"]).length
+        : (!listing["ali-value"] ? 1 : 0);
+
+      return `
       <div class="listing-item" data-title="${listing.title}" data-item-id="${listing.item_id}">
         <a href="${listing.item_url}" class="img-and-title" target="_blank">
           <img src="${listing.image_url}" alt="Product">
           <p>${listing.title}</p>
-          <span class="variation-icons">${variationCircles}</span>
           <span class="price">£${listing.price}</span>
         </a>
         <div class="vert-line"></div>
         <div class="link-wrapper${isLinked}">
-          <input class="url-input" 
-                 type="text" 
-                 placeholder="Aliexpress URL..." 
-                 data-item-id="${listing.item_id}"
-                 value="${aliUrl}">
+          <input class="url-input" type="text" placeholder="Aliexpress URL..." data-item-id="${listing.item_id}" value="${aliUrl}">
           <a href="${searchUrl}" class="auto-link" target="_blank">Search on Ali <i class="fas fa-external-link-alt"></i></a>
         </div>
-      </div> `
-    ;
+        ${aliUrl ? `<div class="variants-wrapper">
+          <span class="variation-icons">${variations}</span>
+          ${unlinkedCount > 0 ? `<a href="${aliUrl}" class="unlinked-count" target="_blank">${unlinkedCount} variants unlinked</a>` : ''}
+          ${unlinkedCount === 0 ? `<div class="linked-tick">✔</div>` : ''}
+        </div>` : ''}
+      </div>`;
+    }).join('')
+  }</div></div>`;
+}
+
+// Click listeners on all variant circles
+let variantListenerAttached = false;
+function updateVariantValues() {
+  if (variantListenerAttached) return; // Prevent multiple bindings
+  variantListenerAttached = true;
+  
+  document.addEventListener('click', async (e) => {
+    if (!e.target.classList.contains('variation-circle')) return;
+
+    const variantTitle = e.target.title;
+    const listingId = e.target.dataset.itemId; // Now grabbed directly from circle
+    let value = prompt(`Enter new value for "${variantTitle}":`);
+
+    if (value !== null) { // Check not cancelled
+      value = value.trim();
+      if (value) { // Check not empty
+        try {
+          const res = await fetch('http://82.42.112.27:5000/api/update-variant', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value, listingId, variantTitle })
+          });
+          if (!res.ok) throw new Error('Failed to update variant');
+          console.log('Variant updated:', await res.json());
+          // Remove unlinked-circle
+          e.target.classList.remove('unlinked-circle');
+        } catch (err) {
+          console.error(err);
+        }
+      }      
+    }
   });
-  html += '</div></div>';
-  return html;
+}
+
+
+async function selectVariant(ali_url, listingId) {
+  // --- INITIAL POST (sent once) ---
+  try {
+    const initResponse = await fetch('http://82.42.112.27:5000/api/init-variant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ali_url, itemId: listingId })
+    });
+    if (!initResponse.ok) {
+      throw new Error('Initial variant post failed');
+    }
+  } catch (error) {
+    console.error('Error initializing variant:', error);
+    return;
+  }
+
+  // --- Create modal and backdrop elements ---
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-container';
+
+  // Create close button
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'modal-close';
+  closeBtn.textContent = 'X';
+  closeBtn.addEventListener('click', () => {
+    clearInterval(pollingInterval);
+    document.body.removeChild(modal);
+    document.body.removeChild(backdrop);
+  });
+  modal.appendChild(closeBtn);
+
+  // Container for the variant columns
+  const variantsContainer = document.createElement('div');
+  variantsContainer.className = 'variants-container';
+  modal.appendChild(variantsContainer);
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(modal);
+
+  // --- Polling function to fetch variants every 3 seconds ---
+  async function pollVariants() {
+    try {
+      const response = await fetch('http://82.42.112.27:5000/api/get-variants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ali_url, itemId: listingId })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch variants');
+      }
+      const variants = await response.json();
+      // Clear the container to refresh display
+      variantsContainer.innerHTML = '';
+
+      variants.forEach(variant => {
+        // Create column for each variant
+        const col = document.createElement('div');
+        col.className = 'variant-column';
+
+        // Main variant image
+        const img = document.createElement('img');
+        img.src = variant.image;
+        col.appendChild(img);
+
+        // OCR image
+        const ocrImg = document.createElement('img');
+        ocrImg.src = variant.ocr;
+        ocrImg.style.marginTop = '10px';
+        col.appendChild(ocrImg);
+
+        // Text content
+        const textDiv = document.createElement('div');
+        textDiv.textContent = variant.textContent || '';
+        textDiv.style.marginTop = '10px';
+        col.appendChild(textDiv);
+
+        // "Select" button
+        const selectBtn = document.createElement('button');
+        selectBtn.textContent = 'Select';
+        selectBtn.style.marginTop = '10px';
+        selectBtn.addEventListener('click', async () => {
+          try {
+            const updateResponse = await fetch('http://82.42.112.27:5000/api/update-variant', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                value: variant.textContent,
+                listingId: listingId,
+                variantTitle: variant.title || ''
+              })
+            });
+            if (!updateResponse.ok) {
+              throw new Error('Failed to update variant');
+            }
+            console.log('Variant updated:', await updateResponse.json());
+            // Optionally close modal after variant selection
+            clearInterval(pollingInterval);
+            document.body.removeChild(modal);
+            document.body.removeChild(backdrop);
+          } catch (error) {
+            console.error('Error updating variant:', error);
+          }
+        });
+        col.appendChild(selectBtn);
+
+        variantsContainer.appendChild(col);
+      });
+    } catch (error) {
+      console.error('Error fetching variants:', error);
+    }
+  }
+
+  // Start polling every 3 seconds and call immediately
+  const pollingInterval = setInterval(pollVariants, 3000);
+  pollVariants();
+}
+
+
+/**
+ * URL Input Focus
+ */
+function focusOnEnter() {
+  let focusOnHover = false; // whether to focus on hover
+
+  document.querySelectorAll(".listing-item").forEach(item => {
+      const input = item.querySelector(".url-input");
+      const linkWrapper = item.querySelector(".link-wrapper");
+      if (!linkWrapper.classList.contains("linked") && focusOnHover) { // ignores linked inputs
+        item.addEventListener("mouseenter", () => setTimeout(() => input.focus({ preventScroll: true }), 50));
+      }
+      input.addEventListener("change", () => {
+          const aliUrl = input.value.trim();
+          const itemId = input.dataset.itemId;
+          const isValidAliUrl = aliUrl.includes("https://www.aliexpress.com/item/");
+          // Immediate UI update
+          linkWrapper.classList.toggle("linked", isValidAliUrl);
+          // Send API update
+          updateAliLink(itemId, aliUrl);
+      });
+  });
+}
+
+function updateAliLink(itemId, aliUrl) {
+    fetch("http://82.42.112.27:5000/api/update-aliexpress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: itemId, aliexpress_url: aliUrl })
+    }).catch(err => console.error(err));
 }
 
 /**
@@ -119,17 +326,14 @@ function formatEbayListings(listings) {
  */
 function openPage(page) {
     const dashboard = document.getElementById("dashboard");
-
     document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active-nav"));
     const activeButton = [...document.querySelectorAll(".nav-btn")].find(btn => btn.getAttribute("onclick").includes(page));
     if (activeButton) activeButton.classList.add("active-nav");
-
     if (page === "main") {
         dashboard.innerHTML = defaultDashboardContent;
         initDashboard();
         return;
     }
-
     fetch(page)
         .then(res => res.ok ? res.text() : Promise.reject("Error loading page"))
         .then(html => {
@@ -163,7 +367,7 @@ function fetchData(endpoint, elementId, formatter = JSON.stringify) {
 }
 
 /**
- * Count Up Animation for Sales
+ * Count Up Animation
  */
 function countUp() {
   const salesElement = document.querySelector(".card-title .green");
@@ -184,36 +388,6 @@ function countUp() {
 }
 
 /**
- * Handle URL Input Focus and Updates
- */
-function focusOnEnter() {
-  document.querySelectorAll(".listing-item").forEach(item => {
-      const input = item.querySelector(".url-input");
-      const linkWrapper = item.querySelector(".link-wrapper");
-      if (!input || linkWrapper.classList.contains("linked")) return;
-      item.addEventListener("mouseenter", () => setTimeout(() => input.focus({ preventScroll: true }), 50));
-
-      input.addEventListener("change", () => {
-          const aliUrl = input.value.trim();
-          const itemId = input.dataset.itemId;
-          const isValidAliUrl = aliUrl.includes("https://www.aliexpress.com/item/");
-          // Immediate UI update
-          linkWrapper.classList.toggle("linked", isValidAliUrl);
-          // Fire & forget API update
-          updateAliLink(itemId, aliUrl);
-      });
-  });
-}
-
-function updateAliLink(itemId, aliUrl) {
-    fetch("http://82.42.112.27:5000/api/update-aliexpress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item_id: itemId, aliexpress_url: aliUrl })
-    }).catch(err => console.error(err));
-}
-
-/**
  * Weekly Sales Chart
  */
 async function initializeChart() { 
@@ -221,18 +395,28 @@ async function initializeChart() {
   if (!canvas) return;
 
   let salesByDay = { "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0 };
-  let totalRevenue = 0, weeklyItems = 0, oneWeekAgo = new Date();
+  let totalRevenue = 0, weeklyItems = 0;
+  
+  let oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  oneWeekAgo.setHours(0, 0, 0, 0); // Normalize to start of the day
 
   try {
       const res = await fetch("http://82.42.112.27:5000/api/shipped-orders");
       const salesData = await res.json();
 
       salesData?.forEach(({ shipped, total_price = 0, quantity = 1 }) => {
-          const day = new Date(shipped).toLocaleString("en-GB", { weekday: "short" });
+          // Fix: Properly parse UK date format (DD-MM-YYYY HH:MM:SS)
+          const [day, month, year] = shipped.split(" ")[0].split("-");
+          const shippedDate = new Date(`${year}-${month}-${day}`);
+          if (isNaN(shippedDate)) {
+              console.warn("Invalid date:", shipped);
+              return;
+          }
+          const dayName = shippedDate.toLocaleString("en-GB", { weekday: "short" });
           totalRevenue += parseFloat(total_price);
-          if (new Date(shipped) >= oneWeekAgo) weeklyItems += quantity;
-          if (salesByDay[day] !== undefined) salesByDay[day] += parseFloat(total_price);
+          if (shippedDate >= oneWeekAgo) weeklyItems += quantity;
+          if (salesByDay[dayName] !== undefined) salesByDay[dayName] += parseFloat(total_price);
       });
 
       document.getElementById("total-revenue").textContent = ` £${totalRevenue.toFixed(2)}`;
@@ -243,7 +427,34 @@ async function initializeChart() {
 
   new Chart(canvas.getContext("2d"), {
       type: "line",
-      data: { labels: Object.keys(salesByDay), datasets: [{ label: "Revenue (£)", data: Object.values(salesByDay), borderColor: "rgba(54, 162, 235, 1)", backgroundColor: "rgba(54, 162, 235, 0.2)", borderWidth: 2, pointRadius: 4, pointBackgroundColor: "rgba(54, 162, 235, 1)", fill: true }] },
-      options: { responsive: true, maintainAspectRatio: false, aspectRatio: 2.9, scales: { y: { beginAtZero: true } } }
+      data: { 
+          labels: Object.keys(salesByDay), 
+          datasets: [{ 
+              label: "Revenue (£)", 
+              data: Object.values(salesByDay), 
+              borderColor: "rgba(54, 162, 235, 1)", 
+              backgroundColor: "rgba(54, 162, 235, 0.2)", 
+              borderWidth: 2, 
+              pointRadius: 4, 
+              pointBackgroundColor: "rgba(54, 162, 235, 1)", 
+              fill: true 
+          }] 
+      },
+      options: { 
+          responsive: true, 
+          maintainAspectRatio: false, 
+          aspectRatio: 2.9, 
+          scales: { y: { beginAtZero: true } } 
+      }
+  });
+}
+
+
+function adjustScrollSpeed() {
+  document.querySelectorAll('.variation-icons').forEach(el => {
+    el.addEventListener('wheel', function(e) {
+      e.preventDefault(); // Stop default scroll
+      el.scrollTop += e.deltaY * 0.2; // Adjust scroll speed (lower = slower)
+    }, { passive: false });
   });
 }

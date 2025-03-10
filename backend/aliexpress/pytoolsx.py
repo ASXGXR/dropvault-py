@@ -5,7 +5,7 @@ import ssl #mail
 import smtplib #mail
 import time
 import pyautogui
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageEnhance
 import pytesseract
 from pytesseract import image_to_data, Output
 import ast
@@ -144,19 +144,37 @@ def findOnPage(target_text, debug=False, invert=False, loop=False, area=None, ti
     """Finds text on a page within an optional area, outputs the coordinates. Stops after timeout seconds if given."""
     start_time = time.time()
     targets = [target_text] if isinstance(target_text, str) else target_text  # Ensure target_text is a list
+
     while True:
         # Check if timeout is reached
         if timeout and (time.time() - start_time) > timeout:
             if debug:
                 print(f"Timeout reached. None of the texts '{targets}' were found.")
             return None
+
+        # Take screenshot and crop if needed
         screenshot = pyautogui.screenshot().convert("RGB")
         if area:
             x1, y1, x2, y2 = area
             screenshot = screenshot.crop((x1, y1, x2, y2))
+
+        # Optional invert
         if invert:
             screenshot = ImageOps.invert(screenshot)
+
+        # --- Image preprocessing for better OCR ---
+        screenshot = screenshot.convert("L")  # Convert to grayscale
+        screenshot = ImageEnhance.Contrast(screenshot).enhance(2.0)  # Boost contrast (adjust factor as needed)
+        screenshot = screenshot.point(lambda x: 0 if x < 128 else 255, '1')  # Binarize (threshold) to black and white
+
+        # OCR processing
         data = image_to_data(screenshot, output_type=Output.DICT)
+
+        # Debug: save processed image to check how OCR sees it
+        if debug:
+            screenshot.save("debug_processed_ocr.png")
+
+        # Search for target text
         for i, text in enumerate(data['text']):
             stripped_text = text.strip().lower()
             if debug:
@@ -170,6 +188,8 @@ def findOnPage(target_text, debug=False, invert=False, loop=False, area=None, ti
                     if debug:
                         print(f"Text '{target}' found at: {x}, {y}")
                     return (x, y)  # Return first found match
+
+        # If not looping, exit
         if not loop:
             if debug:
                 print(f"None of the texts '{targets}' were found.")

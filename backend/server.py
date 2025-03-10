@@ -43,6 +43,40 @@ def get_ebay_listings():
         return Response(json.dumps(listings, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
     except FileNotFoundError:
         return jsonify({"error": "File not found"}), 404
+    
+# Update ali-value for variants
+@app.route('/api/update-variant', methods=['POST'])
+def update_variant():
+    try:
+        data = request.get_json() or {}
+        item_id, variant_title, new_value = data.get("listingId"), data.get("variantTitle"), data.get("value")
+        if not item_id or new_value is None or variant_title is None:
+            return jsonify({"error": "Invalid payload"}), 400
+
+        path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
+        with open(path, "r", encoding="utf-8") as f:
+            listings = json.load(f)
+
+        for listing in listings:
+            if listing.get("item_id") != item_id:
+                continue
+            if variant_title == "Default" and (("variations" not in listing) or not listing["variations"]):
+                listing["ali-value"] = new_value
+            elif "variations" in listing:
+                for options in listing["variations"].values():
+                    for option in options:
+                        if option.get("value") == variant_title:
+                            option["ali-value"] = new_value
+            break
+        else:
+            return jsonify({"error": "Listing not found"}), 404
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(listings, f, indent=4, ensure_ascii=False)
+
+        return jsonify({"success": True, "item_id": item_id, "variant_title": variant_title, "new_value": new_value})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Update aliexpress URLs
 @app.route('/api/update-aliexpress', methods=['POST'])

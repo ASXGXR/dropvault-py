@@ -49,8 +49,11 @@ except json.JSONDecodeError:
 quantity = int(order_info.get("quantity", 1))
 order_id = order_info.get("order_id")
 item_id = order_info.get("item_id")
-if order_id:
-    print(f"\n------\n*NEW ORDER*\nOrder ID: {order_id}")
+item_title = order_info.get("item_title")
+if order_id and item_title:
+    print(f"\n------\n*NEW ORDER*")
+    print(f"Order ID: {order_id}")
+    print(f"Item: {item_title}")
 else:
     sys.exit("Order ID not found in order data.")
 
@@ -108,8 +111,8 @@ while ship_product == True:
         ebay_image_url = get_ebay_image(ebay_url)
         if ebay_image_url:
             print(f"Found ebay image URL: {ebay_image_url}")
-        # Find variation on AliExpress (Call External Script)
-        if select_variant(ebay_image_url, variation_value) == False:
+        # Find variation on AliExpress
+        if select_variant(variation_value) == False:
             ship_product = False
             break
 

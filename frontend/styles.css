@@ -160,7 +160,6 @@ body {
   gap: 16px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   border-bottom: 1px solid rgb(206, 206, 206);
 }
 
@@ -173,7 +172,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   word-wrap: break-word;
-  max-width: 72%;
+  max-width: 31vw;
 }
 
 
@@ -243,10 +242,6 @@ h3    {
   font-weight: 400;
 }
 
-.green {
-  color: var(--green);
-}
-
 .card-title, .card-subtitle {
   padding-left: 8px;
 }
@@ -288,9 +283,7 @@ a:hover {
 
 .link-wrapper {
   gap: 12px;
-  width: 50%;
   align-items: center;
-  justify-content: space-between;
   display: flex;
 }
 .list-btn-wrapper {
@@ -327,13 +320,6 @@ a:hover {
   color: var(--green);
   border-color: var(--green) !important;
 }
-.linked::after {
-  display: flex; align-items: center; justify-content: center;
-  content: "✔";
-  color: var(--green);
-  font-size: 16px;
-  font-weight: bold;
-}
 .linked .auto-link {
   color: var(--green) !important;
 }
@@ -349,7 +335,7 @@ a:hover {
   opacity: 0;
 }
 .listing-item .url-input {
-  width: 100%;
+  max-width: 20vw;
   background: white;
   font-size: var(--small-font);
   outline: none;
@@ -478,42 +464,9 @@ a:hover {
   }
 }
 
-.listing-item:last-child {
+/* .listing-item:last-child {
   border: none !important;
-}
-
-
-.variation-icons {
-  max-width: 25%;
-  display: flex; gap: 4px;
-  flex-wrap: wrap; /* Ensures items go to a new line if no space */
-}
-
-.variation-circle {
-  padding:8px;
-  cursor: pointer;
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid #ccc;
-}
-
-/* Custom Tooltip */
-.variation-circle:hover::after {
-  content: attr(title); /* Uses the title attribute */
-  position: absolute;
-  top: 120%; /* Slightly below the circle */
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  padding: 4px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  white-space: nowrap;
-  z-index: 10;
-}
+} */
 
 .text-center {
   text-align: center;
@@ -534,4 +487,142 @@ a:hover {
 .title-icon {
   width: 25px;
   height: auto;
+}
+
+.variation-icons {
+  display: flex;
+  gap: 4px;
+  flex-direction: column;
+  overflow-y: scroll;
+  max-height: 54px;
+  width: 80px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Edge/IE */
+}
+.variation-icons::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+.variation-circle {
+  padding: 2px 8px;
+  box-sizing: border-box;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  align-items: center;   justify-content: center;
+  min-height: 32px; /* Ensure enough height */
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: center;
+  color: var(--green);
+  border: 1px solid var(--green);
+}
+.unlinked-circle {
+  color: red;
+  border: 1px solid red;
+}
+
+.linked-tick {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green);
+  font-size: 20px;
+  font-weight: bold;
+  margin-left: 16px;
+}
+
+/* Custom Tooltip */
+.variation-circle:hover::after {
+  content: attr(title); /* Uses the title attribute */
+  position: absolute;
+  top: 120%; /* Slightly below the circle */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.unlinked-count {
+  padding: 16px; margin: -24px;
+  color: red !important;
+  text-align: center;
+  font-size: 10px;
+}
+
+.green {
+  color: var(--green) !important;
+}
+
+.variants-wrapper {
+  align-items: center; justify-content: center;
+  width: 12vw;
+  flex-direction: row;
+  display: flex; gap: 8px;
+}
+
+
+.unlinked-count {
+  max-width: 6vw !important;
+}
+
+
+
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 80%;
+  background-color: white;
+  z-index: 1001;
+  overflow-y: auto;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.variants-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin-top: 40px;
+}
+
+.variant-column {
+  flex: 1;
+  margin: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+  min-width: 200px;
+}
+
+.variant-column img {
+  width: 100%;
+  display: block;
 }
