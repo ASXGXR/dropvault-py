@@ -7,7 +7,7 @@ import pytoolsx as pt
 import os
 import re
 
-def variant_capture(ali_url,variant_name):
+def variant_capture(ali_url):
 
     debug = True
     wait_time = 1.1  # Time between clicks
@@ -84,12 +84,6 @@ def variant_capture(ali_url,variant_name):
         ocr_results.append(extracted_info)
         prev_extracted = extracted_info
 
-        if variant_name.lower() in extracted_info.lower():
-            print(f"Variant found at ({current_x}, {current_y}) -> '{extracted_info}'")
-            pyautogui.click(current_x, current_y)
-            found_variant = True
-            break
-
         # Scan horizontally
         while True:
             current_x += d
@@ -100,17 +94,8 @@ def variant_capture(ali_url,variant_name):
                 break
             ocr_results.append(extracted_info)
             prev_extracted = extracted_info
-
-            if variant_name.lower() in extracted_info.lower():
-                print(f"Variant found at ({current_x}, {current_y}) -> '{extracted_info}'")
-                pyautogui.click(current_x, current_y)
-                found_variant = True
-                break
             screenshot_index += 1
             print(screenshot_index)
-
-        if found_variant:
-            break
 
         # Move down one row
         current_y += d
