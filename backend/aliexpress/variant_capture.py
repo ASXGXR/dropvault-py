@@ -7,7 +7,37 @@ import pytoolsx as pt
 import os
 import re
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+def get_ebay_image(ebay_url):
+    """Opens a headless browser and retrieves image URL from eBay listing."""
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+    chrome_options.add_argument("--log-level=3")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(ebay_url)
+    try:
+        first_image = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".ux-image-carousel-item.image-treatment.active.image img"))
+        )
+        image_url = first_image.get_attribute("data-zoom-src") or first_image.get_attribute("src")
+    except Exception as e:
+        print("Error retrieving image:", e)
+        image_url = None
+    driver.quit()
+    return image_url
+
 def variant_capture(ali_url):
+
+    # Get comparison image from ebay
+    # ebay_url = f"https://www.ebay.co.uk/itm/{order_info['item_id']}?var={order_info['variation_id']}"
+    # ebay_image_url = get_ebay_image(ebay_url)
+    # if ebay_image_url:
+    #     print(f"Found ebay image URL: {ebay_image_url}")
 
     debug = True
     wait_time = 1.1  # Time between clicks

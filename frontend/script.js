@@ -144,7 +144,7 @@ function updateVariantValues() {
 
     const variantTitle = e.target.title;
     const listingId = e.target.dataset.itemId; // Now grabbed directly from circle
-    let value = prompt(`Enter new value for "${variantTitle}":`);
+    let value = prompt(`Enter "Color:" value for "${variantTitle}":`);
 
     if (value !== null) { // Check not cancelled
       value = value.trim();
