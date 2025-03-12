@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, Response, request
 import json
 from flask_cors import CORS
-from ebay.get_ebay_image import get_ebay_image
+from flask import send_from_directory
 
 app = Flask(__name__)
 
@@ -33,6 +33,12 @@ def get_shipped_orders():
         return Response(json.dumps(shipped_orders, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
     except FileNotFoundError:
         return jsonify({"error": "File not found"}), 404
+    
+# Serve shipping screenshots
+@app.route('/api/shipping-screenshot/<path:filename>', methods=['GET'])
+def get_shipping_screenshot(filename):
+    screenshots_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipping_screenshots"
+    return send_from_directory(screenshots_dir, filename)
 
 # Get ebay listings
 @app.route('/api/ebay-listings', methods=['GET'])

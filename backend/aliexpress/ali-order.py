@@ -6,6 +6,7 @@ import pyautogui
 import pytoolsx as pt
 import pycountry
 from datetime import datetime
+from get_ebay_image import get_ebay_image
 from select_ali_variant import select_variant
 
 # ---------------------------
@@ -184,7 +185,7 @@ while ship_product:
             pyautogui.write(shipping_info["postal_code"])
             time.sleep(wait_time)
             pyautogui.press("enter")
-            time.sleep(wait_time * 3)
+            time.sleep(wait_time * 2.5)
             pyautogui.press("tab")
             pyautogui.write(shipping_info["address_line1"])
             pyautogui.press("tab")
@@ -193,10 +194,10 @@ while ship_product:
             # Confirm address
             pyautogui.press("tab", presses=5)
             pyautogui.press("enter")
-            time.sleep(wait_time)
+            time.sleep(wait_time*0.5)
 
             pt.hotkey(ctrl_key, "r")  # Refresh page
-            time.sleep(wait_time * 5)
+            time.sleep(wait_time * 4)
             print("Address updated")
         else:
             print("ERROR: Edit Shipping Screen not present.")
@@ -208,7 +209,7 @@ while ship_product:
     # -----------------------
     # Set Quantity
     # -----------------------
-    pyautogui.press("tab", presses=4, interval=0.3)
+    pyautogui.press("tab", presses=4, interval=0.2)
     if quantity != 1:
         pyautogui.write(str(quantity))
         pyautogui.press("tab")
@@ -224,7 +225,7 @@ while ship_product:
     
     # Get item profit
     price_region = (1991, 666, 2125, 708)
-    save_ss = True
+    save_ss = False
     if save_ss:
         region_pyautogui = (price_region[0], price_region[1], price_region[2] - price_region[0], price_region[3] - price_region[1])
         screenshot = pyautogui.screenshot(region=region_pyautogui)
@@ -237,13 +238,22 @@ while ship_product:
     # -----------------------
     # Save Order to File
     # -----------------------
+    # Add ebay img
+    ebay_url = f"https://www.ebay.co.uk/itm/{item_id}?var={order_info['variation_id']}"
+    ebay_img = get_ebay_image(ebay_url)
+    print("Ebay image saved")
+
     shipping_info.update({
         "shipped": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
         "item-url": product_url,
         "unique_item_id": unique_item_id,
+        "ali_price": ali_price,
         "ebay_price": ebay_price,
-        "profit": profit
+        "ebay_img": ebay_img,
+        "profit": profit,
+        "shipping_screenshot": f"shipping_details_{order_id}.png"
     })
+
     try:
         with open(shipped_orders_path, "r", encoding="utf-8") as f:
             existing_orders = json.load(f)

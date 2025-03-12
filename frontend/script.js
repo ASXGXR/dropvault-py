@@ -171,6 +171,65 @@ function updateVariantValues() {
   });
 }
 
+// Shipped Orders Page
+function formatShippedOrders(orders) {
+  return `
+    <div class="card">
+      <div class="listings">
+        ${orders.map(order => {
+          const profitClass = parseFloat(order.profit) >= 0 ? 'green' : 'red';
+          const screenshot = order.shipping_screenshot
+            ? `http://82.42.112.27:5000/api/shipping-screenshot/${order.shipping_screenshot}`
+            : null;
+
+          // Show only values, or 'Default' if empty
+          const variations = (order.variation_aspects && order.variation_aspects.length)
+            ? order.variation_aspects.map(v => v.value).join(', ')
+            : 'Default';
+
+          return `
+            <div class="listing-item">
+              <img src="${order.ebay_img}" alt="Product">
+              <p class="customer-name">${order.full_name}</p>
+              ${screenshot ? `
+              <span class="view-img" onclick="showScreenshot('${screenshot}')">
+                <i class="fas fa-camera"></i>
+              </span>` : ''}
+              <p class="item-title">${order.item_title}</p>
+              <p class="variation-aspects">${variations}</p>
+              <span class="date">${order.shipped}</span>
+              <span class="price">
+                <span id="revenue">£${parseFloat(order.ebay_price).toFixed(2)}</span>
+                <span id="profit" class="${profitClass}">${order.profit >= 0 ? '+' : ''}£${parseFloat(order.profit).toFixed(2)}</span>
+              </span>
+              <span class="quantity">${order.quantity}<span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// Modal to display screenshot
+function showScreenshot(url) {
+  const m = document.createElement('div');
+  m.id = 'screenshot-modal';
+  m.innerHTML = `
+    <span class="close-btn">&times;</span>
+    <div class="modal-content">
+      <img src="${url}" alt="Shipping Screenshot">
+    </div>`;
+  m.querySelector('.close-btn').onclick = () => m.remove();
+  document.addEventListener('keydown', function esc(e) {
+    if (e.key === 'Escape') {
+      m.remove();
+      document.removeEventListener('keydown', esc);
+    }
+  });
+  document.body.appendChild(m);
+}
+
 /**
  * URL Input Focus
  */
@@ -180,18 +239,20 @@ function focusOnEnter() {
   document.querySelectorAll(".listing-item").forEach(item => {
       const input = item.querySelector(".url-input");
       const linkWrapper = item.querySelector(".link-wrapper");
-      if (!linkWrapper.classList.contains("linked") && focusOnHover) { // ignores linked inputs
-        item.addEventListener("mouseenter", () => setTimeout(() => input.focus({ preventScroll: true }), 50));
+      if (input && linkWrapper) {
+        if (!linkWrapper.classList.contains("linked") && focusOnHover) { // ignores linked inputs
+          item.addEventListener("mouseenter", () => setTimeout(() => input.focus({ preventScroll: true }), 50));
+        }
+        input.addEventListener("change", () => {
+            const aliUrl = input.value.trim();
+            const itemId = input.dataset.itemId;
+            const isValidAliUrl = aliUrl.includes("https://www.aliexpress.com/item/");
+            // Immediate UI update
+            linkWrapper.classList.toggle("linked", isValidAliUrl);
+            // Send API update
+            updateAliLink(itemId, aliUrl);
+        });
       }
-      input.addEventListener("change", () => {
-          const aliUrl = input.value.trim();
-          const itemId = input.dataset.itemId;
-          const isValidAliUrl = aliUrl.includes("https://www.aliexpress.com/item/");
-          // Immediate UI update
-          linkWrapper.classList.toggle("linked", isValidAliUrl);
-          // Send API update
-          updateAliLink(itemId, aliUrl);
-      });
   });
 }
 
@@ -339,27 +400,4 @@ function adjustScrollSpeed() {
       el.scrollTop += e.deltaY * 0.2; // Adjust scroll speed (lower = slower)
     }, { passive: false });
   });
-}
-
-
-
-
-// Shipped Orders Page
-function formatShippedOrders(orders) {
-  return orders.map(order => {
-    const profitClass = parseFloat(order.profit) >= 0 ? 'green' : 'red'; // Profit color based on value
-
-    return `
-      <div class="listing-item">
-        <!-- If you don't have image_url, remove this line or add it to the data -->
-        <!--<img src="${order.image_url}" alt="Product">-->
-        <p>${order.item_title}</p>
-        <span class="date">${order.shipped}</span>
-        <span class="price">
-          <span id="revenue">£${parseFloat(order.ebay_price).toFixed(2)}</span>
-          <span id="profit" class="${profitClass}">${order.profit >= 0 ? '+' : ''}£${parseFloat(order.profit).toFixed(2)}</span>
-        </span>
-      </div>
-    `;
-  }).join('');
 }

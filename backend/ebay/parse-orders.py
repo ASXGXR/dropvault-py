@@ -85,4 +85,4 @@ for order in orders:
 with open(OUTPUT_PATH, "w") as f:
     json.dump(parsed_orders, f, indent=4)
 
-print("[✔] Orders parsed.")
+print("Orders parsed.")
