@@ -3,8 +3,6 @@ import time
 import subprocess
 import os
 
-minute_gap = 5  # Wait between each run
-
 # Define paths
 ebay_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay"
 ali_order_script = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\ali-order.py"
@@ -29,4 +27,5 @@ while True:
         subprocess.run(["python", ali_order_script, order_json], check=True)
     print("\n\n")
     
+    minute_gap = 10  # Minutes between each run
     time.sleep(60*minute_gap)

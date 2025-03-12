@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 import json
@@ -13,6 +14,7 @@ from select_ali_variant import select_variant
 # Settings
 # ---------------------------
 wait_time = 1  # Time between clicks
+write_to_file = True
 ship_product = True
 ctrl_key = "ctrl"
 
@@ -53,6 +55,7 @@ try:
         if any(order.get("unique_item_id") == unique_item_id for order in shipped_orders):
             print(f"Order item {unique_item_id} has already been shipped. Skipping...")
             ship_product = False
+            write_to_file = False
 except json.JSONDecodeError:
     print("Error reading shipped_orders.json.")
     ship_product = False
@@ -100,6 +103,7 @@ while ship_product:
     # Final check
     if ali_value == "":
         print("ERROR: ** Item wasn't linked to an aliexpress value **")
+        fail_reason = "** Item wasn't linked to an aliexpress value **"
         ship_product = False
         break
 
@@ -209,7 +213,7 @@ while ship_product:
     # -----------------------
     # Set Quantity
     # -----------------------
-    pyautogui.press("tab", presses=4, interval=0.2)
+    pyautogui.press("tab", presses=4, interval=0.3)
     if quantity != 1:
         pyautogui.write(str(quantity))
         pyautogui.press("tab")
@@ -224,16 +228,26 @@ while ship_product:
     print(f"Screenshot saved: {screenshot_path}")
     
     # Get item profit
-    price_region = (1991, 666, 2125, 708)
-    save_ss = False
-    if save_ss:
-        region_pyautogui = (price_region[0], price_region[1], price_region[2] - price_region[0], price_region[3] - price_region[1])
-        screenshot = pyautogui.screenshot(region=region_pyautogui)
-        screenshot.save("ali-price.png")
-    ali_price_str = re.sub(r"[^\d.]", "", pt.ocr(price_region))
-    ali_price = float(ali_price_str) if ali_price_str else 0.0
-    profit = round(ebay_price - ali_price,2)
-    print(f"Ebay: £{ebay_price:.2f} | Ali: £{ali_price:.2f} | Profit: +£{profit:.2f}")
+    try:
+        # find 'Total'
+        result = pt.findOnPage("Total")
+        if result:
+            x, y = result
+            x += 446
+            box = (x - 67, y - 20, x + 34, y + 20)
+            screenshot = pyautogui.screenshot(region=(box[0], box[1], box[2] - box[0], box[3] - box[1]))
+            screenshot.save("ali-price.png")
+            ali_price_str = re.sub(r"[^\d.]", "", pt.ocr(box))
+            ali_price = float(ali_price_str) if ali_price_str else 0.0
+            profit = round(ebay_price - ali_price, 2)
+            print(f"Ebay: £{ebay_price:.2f} | Ali: £{ali_price:.2f} | Profit: +£{profit:.2f}")
+        else:
+            print("Total not found")
+            profit = ali_price = 0.0
+    except Exception as e:
+        print(e)
+        profit = ali_price = 0.0
+
 
     # -----------------------
     # Save Order to File
@@ -272,4 +286,15 @@ while ship_product:
 # ---------------------------
 if not ship_product:
     print("\n*** CANCELLING ORDER ***")
+    if write_to_file:
+        shipping_info["fail_reason"] = fail_reason if 'fail_reason' in locals() and fail_reason else "UNKNOWN ERROR"
+        path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
+        data = []
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                try: data = json.load(f)
+                except: pass
+        data = [d for d in data if d.get("order_id") != order_id] + [shipping_info]
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
 print("------")

@@ -1,6 +1,10 @@
-fastapi
-uvicorn
+requests
 pyautogui
-pytoolsx
-pytesseractp
+pyperclip
+pycountry
+pygetwindow
+selenium
+Pillow
+pytesseract
 pynput
+ebaysdk

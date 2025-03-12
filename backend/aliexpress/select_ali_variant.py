@@ -9,6 +9,11 @@ def select_variant(ali_value, size=""):
   pyperclip.copy(js)
   hotkey = ('command', 'option', 'j') if os == 'mac' else ('ctrl', 'shift', 'j')
   pyautogui.hotkey(*hotkey); time.sleep(1.5)
+  if "what" in pt.ocr((2058, 1207, 2558, 1439)).lower():
+     pyautogui.click(2538, 1234)
+     time.sleep(1)
+     pyautogui.click(2362, 1400)
+     time.sleep(0.5)
   pyautogui.hotkey('command' if os == 'mac' else 'ctrl', 'v'); pyautogui.press('enter')
 
   if size:
@@ -27,4 +32,4 @@ def select_variant(ali_value, size=""):
      return True
   else:
      print(f"Ali value: {ali_value} not found on page. Wrong variant selected?")
-     False
+     return False

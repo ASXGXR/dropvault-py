@@ -1,7 +1,4 @@
-/**
- * Dashboard Script
- * Cleaned and Optimized for Readability & Maintainability
- */
+// script.js
 
 const cachedData = {};
 let countedUp = false;
@@ -176,13 +173,21 @@ function formatShippedOrders(orders) {
   return `
     <div class="card">
       <div class="listings">
+        <div class="listing-item header-row">
+          <span>Image</span>
+          <span>Customer</span>
+          <span>SS</span>
+          <span>Title</span>
+          <span>Variation</span>
+          <span>Date</span>
+          <span>Qty</span>
+          <span>Price / Profit</span>
+        </div>
         ${orders.map(order => {
           const profitClass = parseFloat(order.profit) >= 0 ? 'green' : 'red';
           const screenshot = order.shipping_screenshot
             ? `http://82.42.112.27:5000/api/shipping-screenshot/${order.shipping_screenshot}`
             : null;
-
-          // Show only values, or 'Default' if empty
           const variations = (order.variation_aspects && order.variation_aspects.length)
             ? order.variation_aspects.map(v => v.value).join(', ')
             : 'Default';
@@ -194,15 +199,15 @@ function formatShippedOrders(orders) {
               ${screenshot ? `
               <span class="view-img" onclick="showScreenshot('${screenshot}')">
                 <i class="fas fa-camera"></i>
-              </span>` : ''}
+              </span>` : '<span></span>'}
               <p class="item-title">${order.item_title}</p>
               <p class="variation-aspects">${variations}</p>
               <span class="date">${order.shipped}</span>
+              <span class="quantity">${order.quantity}</span>
               <span class="price">
                 <span id="revenue">£${parseFloat(order.ebay_price).toFixed(2)}</span>
                 <span id="profit" class="${profitClass}">${order.profit >= 0 ? '+' : ''}£${parseFloat(order.profit).toFixed(2)}</span>
               </span>
-              <span class="quantity">${order.quantity}<span>
             </div>
           `;
         }).join('')}
@@ -319,7 +324,7 @@ function countUp() {
   if (!salesElement) return;
   const targetValue = parseFloat(salesElement.innerText.replace(/[^0-9.]/g, ""));
   let currentValue = 0;
-  const increment = targetValue / 125;
+  const increment = targetValue / 100; // Smaller values = quicker
   const counter = setInterval(() => {
     currentValue += increment;
     if (currentValue >= targetValue) {

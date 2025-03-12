@@ -628,14 +628,6 @@ a:hover {
 }
 
 
-.view-img {
-  display: flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  background: rgb(224, 224, 224);
-}
-
 
 #screenshot-modal {
   position: fixed;
@@ -667,18 +659,51 @@ a:hover {
 #screenshot-modal .close-btn {
   position: absolute;
   top: 24px;
-  right: 64px;
+  right: 4.8vw;
   color: white;
   font-size: 40px;
   cursor: pointer;
 }
 
-
 .customer-name {
+  width: 10%;
   font-weight: bold;
-  color: #555;
+}
+#shipped-orders .item-title {
+  width: 30%;
 }
 .variation-aspects {
+  width: 10%;
   font-weight: 600;
-  color: #555;
 }
+#shipped-orders .date {
+  width: 10%;
+}
+#shipped-orders .price {
+  width: 10%;
+}
+
+
+.view-img {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px !important; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgb(224, 224, 224);
+}
+
+.header-row {
+  font-weight: 600;
+  height: 40px;
+}
+.header-row span {
+  width: 10%; /* Match corresponding elements */
+}
+.header-row span:nth-child(1) { width: 48px; }  /* Image */
+.header-row span:nth-child(2) { width: 10.5%; } /* Customer */
+.header-row span:nth-child(3) { width: 24px; }  /* Screenshot */
+.header-row span:nth-child(4) { width: 30%; } /* Title */
+.header-row span:nth-child(5) { width: 10%; } /* Variation */
+.header-row span:nth-child(6) { width: 10%; } /* Date */
+.header-row span:nth-child(7) { width: 5%; }  /* Qty */
+.header-row span:nth-child(8) { width: 15%; } /* Price/Profit */
