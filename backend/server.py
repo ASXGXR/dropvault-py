@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, Response, request
 import json
 from flask_cors import CORS
-import os
+from ebay.get_ebay_image import get_ebay_image
 
 app = Flask(__name__)
 
@@ -53,11 +53,9 @@ def update_variant():
         item_id, variant_title, new_value = data.get("listingId"), data.get("variantTitle"), data.get("value")
         if not item_id or new_value is None or variant_title is None:
             return jsonify({"error": "Invalid payload"}), 400
-
         path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
         with open(path, "r", encoding="utf-8") as f:
             listings = json.load(f)
-
         for listing in listings:
             if listing.get("item_id") != item_id:
                 continue
@@ -71,10 +69,8 @@ def update_variant():
             break
         else:
             return jsonify({"error": "Listing not found"}), 404
-
         with open(path, "w", encoding="utf-8") as f:
             json.dump(listings, f, indent=4, ensure_ascii=False)
-
         return jsonify({"success": True, "item_id": item_id, "variant_title": variant_title, "new_value": new_value})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -87,18 +83,15 @@ def update_aliexpress():
         item_id, new_url = data.get("item_id"), data.get("aliexpress_url")
         if not item_id or new_url is None:
             return jsonify({"error": "Invalid payload"}), 400
-
         listings_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
         with open(listings_path, "r", encoding="utf-8") as f:
             listings = json.load(f)
-
         for listing in listings:
             if listing.get("item_id") == item_id:
                 listing["aliexpress_url"] = new_url
                 break
         else:
             return jsonify({"error": "Listing not found"}), 404
-
         with open(listings_path, "w", encoding="utf-8") as f:
             json.dump(listings, f, indent=4, ensure_ascii=False)
         return jsonify({"success": True, "item_id": item_id})

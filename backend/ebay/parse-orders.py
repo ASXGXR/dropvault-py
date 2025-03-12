@@ -1,20 +1,41 @@
+import re
 import json
 import requests
 
+# =========================
+# Paths
+# =========================
 INPUT_PATH = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\ebay_orders.json"
 OUTPUT_PATH = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\parsed_orders.json"
 
+
+# =========================
+# Helper Functions
+# =========================
+def format_words(text):
+    """Capitalize each word and remove commas, full stops, and extra spaces."""
+    if not isinstance(text, str):
+        return ""
+    text = re.sub(r"[.,]", "", text)  # Remove commas and full stops
+    return " ".join(word.capitalize() for word in text.strip().split())
+
 def validate_and_format_postcode(postcode):
-    """Validate and format a UK postcode using the Postcodes.io API."""
+    """Validate and format a UK postcode using Postcodes.io API."""
     cleaned_postcode = postcode.replace(" ", "").upper()
     url = f"https://api.postcodes.io/postcodes/{cleaned_postcode}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
         data = response.json()
-        return data["result"]["postcode"]  # Return formatted postcode
-    return postcode  # Return original if invalid
+        return data["result"]["postcode"]
+    except requests.RequestException as e:
+        print(f"[Postcode API Error] {e}")
+        return postcode  # Return original if API fails
 
+
+# =========================
+# Main Parsing Logic
+# =========================
 with open(INPUT_PATH, "r") as f:
     response = json.load(f)
 
@@ -25,48 +46,43 @@ for order in orders:
     ship_to = order.get("fulfillmentStartInstructions", [{}])[0].get("shippingStep", {}).get("shipTo", {})
     addr = ship_to.get("contactAddress", {})
 
-    # Check required fields (try both ship_to and contact address)
-    required = ["fullName", "addressLine1", "city", "postalCode", "countryCode"]
-    missing = [field for field in required if not (ship_to.get(field) or addr.get(field))]
+    # Check for required fields
+    required_fields = ["fullName", "addressLine1", "city", "postalCode", "countryCode"]
+    missing = [field for field in required_fields if not (ship_to.get(field) or addr.get(field))]
     if not ship_to.get("primaryPhone", {}).get("phoneNumber"):
         missing.append("phoneNumber")
     if missing:
-        print(f"Order {order.get('orderId','Unknown')} missing: {', '.join(missing)}. Skipping.")
+        print(f"[Skipped] Order {order.get('orderId', 'Unknown')} missing: {', '.join(missing)}")
         continue
 
-    # Validate and format postcode
+    # Format postcode and clean addressLine2
     formatted_postcode = validate_and_format_postcode(addr.get("postalCode", ""))
-
-    # Remove any word containing "ebay" from addressLine2
     address_line2 = " ".join(word for word in addr.get("addressLine2", "").split() if "ebay" not in word.lower())
 
-    # Extract item details
-    # Process each item in the order
-    for line_item in order.get("lineItems", []):
-        title = line_item.get("title", "Unknown Item")
-        cost = line_item.get("lineItemCost", {}).get("value", "0.00")
-        quantity = line_item.get("quantity", 0)
-        item_id = line_item.get("legacyItemId", "")
-        variation_aspects = line_item.get("variationAspects", [])
-        
+    # Parse each line item in the order
+    for item in order.get("lineItems", []):
         parsed_orders.append({
             "order_id": order.get("orderId", ""),
-            "full_name": ship_to["fullName"],
-            "address_line1": addr["addressLine1"],
-            "address_line2": " ".join(word for word in addr.get("addressLine2", "").split() if "ebay" not in word.lower()),
-            "city": addr["city"],
+            "full_name": format_words(ship_to["fullName"]),
+            "address_line1": format_words(addr["addressLine1"]),
+            "address_line2": format_words(address_line2),
+            "city": format_words(addr["city"]),
             "postal_code": formatted_postcode,
             "country": addr["countryCode"],
             "phone": ship_to.get("primaryPhone", {}).get("phoneNumber", ""),
-            "quantity": quantity,
-            "item_title": title,
-            "item_cost": cost,
-            "item_id": item_id,
-            "variation_id": line_item.get("legacyVariationId", ""),
-            "variation_aspects": variation_aspects
+            "quantity": item.get("quantity", 0),
+            "item_title": item.get("title", "Unknown Item"),
+            "item_cost": item.get("lineItemCost", {}).get("value", "0.00"),
+            "item_id": item.get("legacyItemId", ""),
+            "variation_id": item.get("legacyVariationId", ""),
+            "variation_aspects": item.get("variationAspects", [])
         })
 
+
+# =========================
+# Save Result
+# =========================
 with open(OUTPUT_PATH, "w") as f:
     json.dump(parsed_orders, f, indent=4)
 
-print("Orders parsed.")
+print("[✔] Orders parsed.")

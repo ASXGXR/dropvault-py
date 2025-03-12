@@ -9,6 +9,7 @@ from PIL import Image, ImageOps, ImageEnhance
 import pytesseract
 from pytesseract import image_to_data, Output
 import ast
+import os
 try:
     import beepy
 except:
@@ -229,23 +230,19 @@ def newOcr(region,invert="no"):
     text = pytesseract.image_to_string(binarized_image).strip().lower()
     return text
 
-def ocr(x1=0, y1=0, x2=1920, y2=1080, binarize="no", save="no", thresh=80):
-    """Performs OCR on a screenshot taken from the specified screen region."""
-    if isinstance(x1, list) and len(x1) == 4:
-        x1, y1, x2, y2 = x1
-    try:
-        image = pyautogui.screenshot(region=(int(x1), int(y1), int(x2-x1), int(y2-y1)))
-        if binarize == "yes":
-            image = image.convert('L')
-            image = image.point(lambda p: p > thresh and 255)
-            image = ImageOps.invert(image)
-        if save == "yes":
-            image.save("ss.png")
-        ocr_text = pytesseract.image_to_string(image)
-    except Exception as e:
-        print(f"Error occurred scanning or taking screenshot: {e}")
-        ocr_text = ""
-    return ocr_text.lower()
+def ocr(region=None, invert=False, debug=False):
+    """Performs OCR on a region or whole screen if region is None, returns text as a string."""
+    screenshot = pyautogui.screenshot().convert("RGB")
+    if region is not None:
+        x1, y1, x2, y2 = region
+        screenshot = screenshot.crop((x1, y1, x2, y2))
+    if invert:
+        screenshot = ImageOps.invert(screenshot)
+    data = image_to_data(screenshot, output_type=Output.DICT)
+    extracted_text = " ".join(data['text'][i].strip() for i in range(len(data['text'])) if data['text'][i].strip())
+    if debug:
+        print(f"OCR Result: {extracted_text}")
+    return extracted_text
 
 def screenshot(filename="ss.png"):
     """Takes and saves a screenshot, defaults to ss.png."""

@@ -4,12 +4,12 @@
  */
 
 const cachedData = {};
+let countedUp = false;
 
 document.addEventListener("DOMContentLoaded", () => {
     const dashboard = document.getElementById("dashboard");
     defaultDashboardContent = dashboard.innerHTML;
     initDashboard();
-    countUp();
 });
 
 /**
@@ -38,9 +38,12 @@ function loadEbayListings() {
  * Load Content for Separate Pages
  */
 function loadSeparatePages() {
-    if (document.getElementById("ebay-listings")) {
-        fetchData("ebay-listings", "ebay-listings", formatEbayListings);
-    }
+  if (document.getElementById("ebay-listings")) {
+      fetchData("ebay-listings", "ebay-listings", formatEbayListings);
+  }
+  if (document.getElementById("shipped-orders")) {
+      fetchData("shipped-orders", "shipped-orders", formatShippedOrders);
+  }
 }
 
 /**
@@ -90,26 +93,27 @@ function formatEbayListings(listings) {
 
       let variationsArr = [];
       if (listing.variations && typeof listing.variations === 'object') {
-        variationsArr = Object.values(listing.variations).flat();
+        variationsArr = Object.entries(listing.variations)
+          .filter(([key]) => key.toLowerCase() !== 'size')
+          .map(([, value]) => value)
+          .flat();
       }
 
       let variations = '';
-      if (variationsArr.length > 1) {
-        // Multiple variations
+      if (variationsArr.length > 0) { // Variations exist
         variations = variationsArr.map(v => {
           const unlinkedClass = !v["ali-value"] ? ' unlinked-circle' : '';
           return `<span class="variation-circle${unlinkedClass}" title="${v.value}" data-item-id="${listing.item_id}">${v.value}</span>`;
-        }).join('');        
-      } else {
-        // No variations or only one, use Default circle
+        }).join('');
+      } else { // No variations, show Default
         const aliValue = listing["ali-value"] || '';
         const unlinkedClass = !aliValue ? ' unlinked-circle' : '';
         variations = `<span class="variation-circle${unlinkedClass}" title="Default" data-item-id="${listing.item_id}">Default</span>`;
-      }
+      }      
 
-      const unlinkedCount = variationsArr.length > 1
+      const unlinkedCount = variationsArr.length > 0
         ? variationsArr.filter(v => !v["ali-value"]).length
-        : (!listing["ali-value"] ? 1 : 0);
+        : (!listing["ali-value"] ? 1 : 0);    
 
       return `
       <div class="listing-item" data-title="${listing.title}" data-item-id="${listing.item_id}">
@@ -248,20 +252,20 @@ function fetchData(endpoint, elementId, formatter = JSON.stringify) {
  * Count Up Animation
  */
 function countUp() {
-  const salesElement = document.querySelector(".card-title .green");
+  if (countedUp) return; // Prevent running more than once
+  countedUp = true;
+  const salesElement = document.getElementById("total-profit");
   if (!salesElement) return;
-
-  const targetValue = parseInt(salesElement.innerText.replace(/[^0-9]/g, ""), 10);
+  const targetValue = parseFloat(salesElement.innerText.replace(/[^0-9.]/g, ""));
   let currentValue = 0;
-  const increment = targetValue / 125; // Approximate duration of 2s at 16ms per frame
-
+  const increment = targetValue / 125;
   const counter = setInterval(() => {
-      currentValue += increment;
-      if (currentValue >= targetValue) {
-          currentValue = targetValue;
-          clearInterval(counter);
-      }
-      salesElement.innerText = `£${Math.floor(currentValue).toLocaleString()}`;
+    currentValue += increment;
+    if (currentValue >= targetValue) {
+      currentValue = targetValue;
+      clearInterval(counter);
+    }
+    salesElement.innerText = `£${currentValue.toFixed(2)}`;
   }, 16);
 }
 
@@ -271,20 +275,16 @@ function countUp() {
 async function initializeChart() { 
   const canvas = document.getElementById("weeklySalesChart");
   if (!canvas) return;
-
-  let salesByDay = { "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0 };
-  let totalRevenue = 0, weeklyItems = 0;
-  
+  let profitByDay = { "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0 };
+  let totalProfit = 0, weeklyItems = 0;
   let oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  oneWeekAgo.setHours(0, 0, 0, 0); // Normalize to start of the day
-
+  oneWeekAgo.setHours(0, 0, 0, 0); // Normalize to start of day
   try {
       const res = await fetch("http://82.42.112.27:5000/api/shipped-orders");
       const salesData = await res.json();
-
-      salesData?.forEach(({ shipped, total_price = 0, quantity = 1 }) => {
-          // Fix: Properly parse UK date format (DD-MM-YYYY HH:MM:SS)
+      salesData?.forEach(({ shipped, profit = 0, quantity = 1 }) => {
+          // Parse date correctly
           const [day, month, year] = shipped.split(" ")[0].split("-");
           const shippedDate = new Date(`${year}-${month}-${day}`);
           if (isNaN(shippedDate)) {
@@ -292,41 +292,45 @@ async function initializeChart() {
               return;
           }
           const dayName = shippedDate.toLocaleString("en-GB", { weekday: "short" });
-          totalRevenue += parseFloat(total_price);
+          // Sum profits and items
+          totalProfit += parseFloat(profit);
           if (shippedDate >= oneWeekAgo) weeklyItems += quantity;
-          if (salesByDay[dayName] !== undefined) salesByDay[dayName] += parseFloat(total_price);
+          // Add profit to day
+          if (profitByDay[dayName] !== undefined) profitByDay[dayName] += parseFloat(profit);
       });
-
-      document.getElementById("total-revenue").textContent = ` £${totalRevenue.toFixed(2)}`;
+      document.getElementById("total-profit").textContent = ` £${totalProfit.toFixed(2)}`;
       document.getElementById("weekly-items").textContent = weeklyItems;
+
+      // ✅ Now that total-revenue is set, run count up
+      countUp();
   } catch (error) {
       console.error("Error fetching sales data:", error);
   }
-
+  
+  // Render profit chart
   new Chart(canvas.getContext("2d"), {
-      type: "line",
-      data: { 
-          labels: Object.keys(salesByDay), 
-          datasets: [{ 
-              label: "Revenue (£)", 
-              data: Object.values(salesByDay), 
-              borderColor: "rgba(54, 162, 235, 1)", 
-              backgroundColor: "rgba(54, 162, 235, 0.2)", 
-              borderWidth: 2, 
-              pointRadius: 4, 
-              pointBackgroundColor: "rgba(54, 162, 235, 1)", 
-              fill: true 
-          }] 
-      },
-      options: { 
-          responsive: true, 
-          maintainAspectRatio: false, 
-          aspectRatio: 2.9, 
-          scales: { y: { beginAtZero: true } } 
-      }
+    type: "line",
+    data: { 
+        labels: Object.keys(profitByDay), 
+        datasets: [{ 
+            label: "Profit (£)", 
+            data: Object.values(profitByDay), 
+            borderColor: "rgba(54, 162, 235, 1)", 
+            backgroundColor: "rgba(54, 162, 235, 0.2)", 
+            borderWidth: 2, 
+            pointRadius: 4, 
+            pointBackgroundColor: "rgba(54, 162, 235, 1)", 
+            fill: true 
+        }] 
+    },
+    options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        aspectRatio: 2.9, 
+        scales: { y: { beginAtZero: true } } 
+    }
   });
 }
-
 
 function adjustScrollSpeed() {
   document.querySelectorAll('.variation-icons').forEach(el => {
@@ -335,4 +339,27 @@ function adjustScrollSpeed() {
       el.scrollTop += e.deltaY * 0.2; // Adjust scroll speed (lower = slower)
     }, { passive: false });
   });
+}
+
+
+
+
+// Shipped Orders Page
+function formatShippedOrders(orders) {
+  return orders.map(order => {
+    const profitClass = parseFloat(order.profit) >= 0 ? 'green' : 'red'; // Profit color based on value
+
+    return `
+      <div class="listing-item">
+        <!-- If you don't have image_url, remove this line or add it to the data -->
+        <!--<img src="${order.image_url}" alt="Product">-->
+        <p>${order.item_title}</p>
+        <span class="date">${order.shipped}</span>
+        <span class="price">
+          <span id="revenue">£${parseFloat(order.ebay_price).toFixed(2)}</span>
+          <span id="profit" class="${profitClass}">${order.profit >= 0 ? '+' : ''}£${parseFloat(order.profit).toFixed(2)}</span>
+        </span>
+      </div>
+    `;
+  }).join('');
 }

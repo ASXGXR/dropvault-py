@@ -51,3 +51,5 @@ else:
 pyperclip.copy(search_url)
 pyautogui.hotkey(ctrl_key, "v")
 pyautogui.press("enter")
+
+time.sleep(4) # wait for page to load

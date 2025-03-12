@@ -74,6 +74,10 @@ except Exception as e:
     print(f"Unable to retrieve eBay listings: {e}")
 
 
+######################
+##  PARSE LISTINGS  ##
+######################
+
 try:
     listings_json_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
 
