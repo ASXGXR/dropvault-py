@@ -8,6 +8,7 @@ import requests
 INPUT_PATH = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\ebay_orders.json"
 OUTPUT_PATH = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\parsed_orders.json"
 
+debug = False
 
 # =========================
 # Helper Functions
@@ -65,7 +66,7 @@ for order in orders:
             "order_id": order.get("orderId", ""),
             "full_name": format_words(ship_to["fullName"]),
             "address_line1": format_words(addr["addressLine1"]),
-            "address_line2": format_words(address_line2),
+            "address_line2": address_line2,
             "city": format_words(addr["city"]),
             "postal_code": formatted_postcode,
             "country": addr["countryCode"],
@@ -85,4 +86,5 @@ for order in orders:
 with open(OUTPUT_PATH, "w") as f:
     json.dump(parsed_orders, f, indent=4)
 
-print("Orders parsed.")
+if debug:
+    print("Orders parsed.")

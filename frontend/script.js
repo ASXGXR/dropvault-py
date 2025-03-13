@@ -41,6 +41,9 @@ function loadSeparatePages() {
   if (document.getElementById("shipped-orders")) {
       fetchData("shipped-orders", "shipped-orders", formatShippedOrders);
   }
+  if (document.getElementById("server-logs")) {
+      fetchData("failed-shipments", "server-logs", formatServerLogs);
+  }
 }
 
 /**
@@ -235,6 +238,36 @@ function showScreenshot(url) {
   document.body.appendChild(m);
 }
 
+// Server Logs Page
+function formatServerLogs(logs) {
+  return `
+    <div class="card">
+      <div class="listings">
+        <div class="listing-item header-row">
+          <span>Order ID</span>
+          <span>Customer</span>
+          <span>Item Title</span>
+          <span>Quantity</span>
+          <span>Cost</span>
+          <span>Shipped</span>
+          <span>Profit</span>
+        </div>
+        ${logs.map(log => `
+          <div class="listing-item">
+            <span>${log.order_id}</span>
+            <span>${log.full_name}</span>
+            <span>${log.item_title}</span>
+            <span>${log.quantity}</span>
+            <span>£${parseFloat(log.item_cost).toFixed(2)}</span>
+            <span>${log.shipped}</span>
+            <span>£${parseFloat(log.profit).toFixed(2)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 /**
  * URL Input Focus
  */
@@ -273,6 +306,7 @@ function updateAliLink(itemId, aliUrl) {
  * Change Page Content Dynamically
  */
 function openPage(page) {
+  console.log(page);
     const dashboard = document.getElementById("dashboard");
     document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active-nav"));
     const activeButton = [...document.querySelectorAll(".nav-btn")].find(btn => btn.getAttribute("onclick").includes(page));
@@ -283,15 +317,17 @@ function openPage(page) {
         return;
     }
     fetch(page)
-        .then(res => res.ok ? res.text() : Promise.reject("Error loading page"))
-        .then(html => {
-            dashboard.innerHTML = html;
-            initDashboard();
-        })
-        .catch(err => {
-            console.error(err);
-            dashboard.innerHTML = "<p>Error loading page.</p>";
-        });
+    .then(res => res.ok ? res.text() : Promise.reject("Error loading page"))
+    .then(html => {
+        console.log(html); // Debug: log fetched HTML
+        dashboard.innerHTML = html;
+        initDashboard();
+    })
+    .catch(err => {
+        console.error(err);
+        dashboard.innerHTML = "<p>Error loading page.</p>";
+    });
+
 }
 
 /**

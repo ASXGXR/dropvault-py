@@ -108,7 +108,8 @@ def update_aliexpress():
 @app.route('/api/failed-shipments', methods=['GET'])
 def get_failed_shipments():
     try:
-        with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json", "r", encoding="utf-8") as f:
+        failed_shipments_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
+        with open(failed_shipments_path, "r", encoding="utf-8") as f:
             failed_shipments = json.load(f)
         return Response(json.dumps(failed_shipments, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
     except FileNotFoundError:

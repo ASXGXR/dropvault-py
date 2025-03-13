@@ -37,10 +37,6 @@ order_id = order_info.get("order_id")
 item_id = order_info.get("item_id")
 if not (order_id):
     sys.exit("Order ID not found in order data.")
-print(f"\n------\n*NEW ORDER*")
-print(f"Order ID: {order_id}")
-print(f"Item: {order_info.get("item_title")}")
-print(f"Customer: {order_info.get("full_name")}")
 ebay_price = float(order_info.get("item_cost",0))
 
 # ---------------------------
@@ -53,7 +49,6 @@ try:
         shipped_orders = json.load(f)
         unique_item_id = f"{order_id}_{item_id}"
         if any(order.get("unique_item_id") == unique_item_id for order in shipped_orders):
-            print(f"Order item {unique_item_id} has already been shipped. Skipping...")
             ship_product = False
             write_to_file = False
 except json.JSONDecodeError:
@@ -66,6 +61,11 @@ except json.JSONDecodeError:
 shipping_info = order_info
 
 while ship_product:
+
+    print(f"\n------\n*NEW ORDER*")
+    print(f"Order ID: {order_id}")
+    print(f"Item: {order_info.get("item_title")}")
+    print(f"Customer: {order_info.get("full_name")}")
 
     # -----------------------
     # Get eBay Listing
@@ -285,8 +285,8 @@ while ship_product:
 # Final Output
 # ---------------------------
 if not ship_product:
-    print("\n*** CANCELLING ORDER ***")
     if write_to_file:
+        print("\n*** CANCELLING ORDER ***")
         shipping_info["fail_reason"] = fail_reason if 'fail_reason' in locals() and fail_reason else "UNKNOWN ERROR"
         path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
         data = []
@@ -297,4 +297,5 @@ if not ship_product:
         data = [d for d in data if d.get("order_id") != order_id] + [shipping_info]
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
-print("------")
+if write_to_file:
+    print("------")

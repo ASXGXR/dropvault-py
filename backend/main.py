@@ -7,6 +7,8 @@ import os
 ebay_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay"
 ali_order_script = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\ali-order.py"
 
+print("**Starting up..")
+orders_printed = False
 while True:
 
     # Run eBay scripts
@@ -25,7 +27,12 @@ while True:
     for order in orders:
         order_json = json.dumps(order)
         subprocess.run(["python", ali_order_script, order_json], check=True)
-    print("\n\n")
+    if not orders_printed: 
+        print(f"**{len(orders)} Orders Received & Parsed")
+        print("\n" + "="*40)
+        print("🔄  DropVault Automation Started")
+        print("="*40 + "\n")
+        orders_printed = True
     
     minute_gap = 10  # Minutes between each run
     time.sleep(60*minute_gap)

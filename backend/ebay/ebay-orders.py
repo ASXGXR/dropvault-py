@@ -8,6 +8,8 @@ import time
 ##  EBAY API ACCESS  ##
 #######################
 
+debug = False
+
 # Check 1 hour passed - refresh access token
 hour_pass = 1
 current_time = datetime.now()
@@ -68,7 +70,8 @@ try:
     with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\raw_listings.json", 'w') as outfile:
         json.dump(all_listings, outfile, indent=4)
 
-    print(f"{len(all_listings)} listings retrieved.")
+    if debug:
+        print(f"{len(all_listings)} listings retrieved.")
 
 except Exception as e:
     print(f"Unable to retrieve eBay listings: {e}")
@@ -163,6 +166,7 @@ if response.status_code == 200:
     with open(orders_json_path, "w") as f:
         json.dump(orders, f, indent=4)
     order_count = len(orders.get("orders", []))
-    print(f"{order_count} orders received.")
+    if debug:
+        print(f"{order_count} orders received.")
 else:
     print(f"Error: {response.status_code}, {response.text}")
