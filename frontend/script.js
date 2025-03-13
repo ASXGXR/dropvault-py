@@ -19,6 +19,7 @@ function initDashboard() {
     focusOnEnter();
     adjustScrollSpeed();
     updateVariantValues();
+    logFailedOrdersCount();
 }
 
 /**
@@ -44,6 +45,16 @@ function loadSeparatePages() {
   if (document.getElementById("server-logs")) {
       fetchData("failed-shipments", "server-logs", formatServerLogs);
   }
+}
+function logFailedOrdersCount() {
+  fetch('http://82.42.112.27:5000/api/failed-shipments')
+      .then(res => res.json())
+      .then(data => {
+          console.log(`Failed Orders Count: ${data.length}`);
+          const el = document.getElementById('failed_shipments');
+          if (el) el.innerHTML = data.length ? `<span class="notif">${data.length}</span>` : '';
+      })
+      .catch(err => console.error(err));
 }
 
 /**
@@ -243,24 +254,13 @@ function formatServerLogs(logs) {
   return `
     <div class="card">
       <div class="listings">
-        <div class="listing-item header-row">
-          <span>Order ID</span>
-          <span>Customer</span>
-          <span>Item Title</span>
-          <span>Quantity</span>
-          <span>Cost</span>
-          <span>Shipped</span>
-          <span>Profit</span>
-        </div>
         ${logs.map(log => `
           <div class="listing-item">
-            <span>${log.order_id}</span>
-            <span>${log.full_name}</span>
-            <span>${log.item_title}</span>
-            <span>${log.quantity}</span>
-            <span>£${parseFloat(log.item_cost).toFixed(2)}</span>
-            <span>${log.shipped}</span>
-            <span>£${parseFloat(log.profit).toFixed(2)}</span>
+            <img src="${log.ebay_img}" alt="Product">
+            <p class="item-title">${log.item_title}</p>
+            <span class="quantity">${log.quantity}</span>
+            <p class="customer-name">${log.full_name}</p>
+            <p class="fail-reason">${log.fail_reason}</p>
           </div>
         `).join('')}
       </div>
@@ -306,7 +306,6 @@ function updateAliLink(itemId, aliUrl) {
  * Change Page Content Dynamically
  */
 function openPage(page) {
-  console.log(page);
     const dashboard = document.getElementById("dashboard");
     document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active-nav"));
     const activeButton = [...document.querySelectorAll(".nav-btn")].find(btn => btn.getAttribute("onclick").includes(page));
@@ -317,17 +316,15 @@ function openPage(page) {
         return;
     }
     fetch(page)
-    .then(res => res.ok ? res.text() : Promise.reject("Error loading page"))
-    .then(html => {
-        console.log(html); // Debug: log fetched HTML
-        dashboard.innerHTML = html;
-        initDashboard();
-    })
-    .catch(err => {
-        console.error(err);
-        dashboard.innerHTML = "<p>Error loading page.</p>";
-    });
-
+        .then(res => res.ok ? res.text() : Promise.reject("Error loading page"))
+        .then(html => {
+            dashboard.innerHTML = html;
+            initDashboard();
+        })
+        .catch(err => {
+            console.error(err);
+            dashboard.innerHTML = "<p>Error loading page.</p>";
+        });
 }
 
 /**

@@ -707,3 +707,9 @@ a:hover {
 .header-row span:nth-child(6) { width: 10%; } /* Date */
 .header-row span:nth-child(7) { width: 5%; }  /* Qty */
 .header-row span:nth-child(8) { width: 15%; } /* Price/Profit */
+
+
+.fail-reason {
+  color: red !important;
+  font-weight: bold;
+}

@@ -43,6 +43,7 @@ ebay_price = float(order_info.get("item_cost",0))
 # Check If Already Shipped
 # ---------------------------
 shipped_orders_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipped_orders.json"
+failed_shipments_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
 
 try:
     with open(shipped_orders_path, "r", encoding="utf-8") as f:
@@ -279,7 +280,25 @@ while ship_product:
         json.dump(orders, f, indent=4)
     print("Order saved to shipped_orders.json")
     pt.hotkey(ctrl_key, "w")  # Close tab
-    break
+
+    # ---------------------------
+    # Remove from Failed Orders if Present
+    # ---------------------------
+    if os.path.exists(failed_shipments_path):
+        try:
+            with open(failed_shipments_path, "r", encoding="utf-8") as f:
+                failed_orders = json.load(f)
+            # Remove any failed orders matching this order_id
+            updated_failed_orders = [o for o in failed_orders if o.get("order_id") != order_id]
+            if len(updated_failed_orders) < len(failed_orders):
+                # Write back updated list if something was removed
+                with open(failed_shipments_path, "w", encoding="utf-8") as f:
+                    json.dump(updated_failed_orders, f, indent=4, ensure_ascii=False)
+                print(f"Order {order_id} removed from failed_shipments.json")
+        except json.JSONDecodeError:
+            print("Error reading failed_shipments.json. Could not update failed orders.")
+
+    break # exit loop
 
 # ---------------------------
 # Final Output
@@ -288,14 +307,13 @@ if not ship_product:
     if write_to_file:
         print("\n*** CANCELLING ORDER ***")
         shipping_info["fail_reason"] = fail_reason if 'fail_reason' in locals() and fail_reason else "UNKNOWN ERROR"
-        path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
         data = []
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
+        if os.failed_shipments_path.exists(failed_shipments_path):
+            with open(failed_shipments_path, "r", encoding="utf-8") as f:
                 try: data = json.load(f)
                 except: pass
         data = [d for d in data if d.get("order_id") != order_id] + [shipping_info]
-        with open(path, "w", encoding="utf-8") as f:
+        with open(failed_shipments_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 if write_to_file:
     print("------")
