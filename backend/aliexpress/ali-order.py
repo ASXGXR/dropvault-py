@@ -137,7 +137,7 @@ while ship_product:
     while not buy_now_loc and time.time() - start_time < 15:
         try:
             buy_now_loc = pyautogui.locateOnScreen(
-                r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\buy_now_ref.png",
+                r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\buttons\buy_now_ref.png",
                 confidence=0.8
             )
         except: pass
@@ -258,7 +258,7 @@ while ship_product:
     while not pay_now_loc and time.time() - start_time < 15:
         try:
             pay_now_loc = pyautogui.locateOnScreen(
-                r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\pay_now_ref.png",
+                r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\buttons\pay_now_ref.png",
                 confidence=0.8
             )
         except: pass
