@@ -1,19 +1,26 @@
 // script.js
 
+/**
+ * Initialize Variables
+ */
+
 const cachedData = {};
 let countedUp = false;
-
-document.addEventListener("DOMContentLoaded", () => {
-    const dashboard = document.getElementById("dashboard");
-    defaultDashboardContent = dashboard.innerHTML;
-    initDashboard();
-});
 
 /**
  * Initialize Dashboard Elements & Fetch Data
  */
+
+// DOC LOAD:
+document.addEventListener("DOMContentLoaded", () => {
+  const dashboard = document.getElementById("dashboard");
+  defaultDashboardContent = dashboard.innerHTML;
+  initDashboard();
+});
+
 function initDashboard() {
     loadEbayListings();
+    loadHomeShippedOrders();
     initializeChart();
     loadSeparatePages();
     focusOnEnter();
@@ -31,6 +38,11 @@ function loadEbayListings() {
         setTimeout(focusOnEnter, 100);
     }
 }
+function loadHomeShippedOrders() {
+  if (document.getElementById("home-shipped-orders")) {
+      fetchData("shipped-orders", "home-shipped-orders", formatHomeShippedOrders);
+  }
+}
 
 /**
  * Load Content for Separate Pages
@@ -46,6 +58,7 @@ function loadSeparatePages() {
       fetchData("failed-shipments", "server-logs", formatServerLogs);
   }
 }
+// Shipping Errors / Failed Orders
 function logFailedOrdersCount() {
   fetch('http://82.42.112.27:5000/api/failed-shipments')
     .then(res => res.json())
@@ -53,8 +66,14 @@ function logFailedOrdersCount() {
       console.log(`Failed Orders Count: ${data.length}`);
       const el = document.getElementById('failed_shipments');
       const errorNav = document.getElementById('error-nav');
+      const shippingErrors = document.getElementById('shipping-errors');
+      const errorWrapper = document.querySelector('.title-error-wrapper'); // ✅ Grab error-wrapper
+
+      if (errorWrapper) errorWrapper.style.display = data.length ? 'flex' : 'none'; // ✅ Hide if none
+      
       if (el) el.innerHTML = data.length ? `<span class="notif">${data.length}</span>` : '';
       if (errorNav) errorNav.style.display = data.length ? 'block' : 'none';
+      if (shippingErrors) shippingErrors.innerText = data.length; // Update shipping errors count
     })
     .catch(console.error);
 }
@@ -82,18 +101,16 @@ function formatHomeEbayListings(listings) {
               <div class="vert-line"></div>
               <div class="link-wrapper${isLinked}">
                   <input class="url-input" type="text" placeholder="Aliexpress URL..." data-item-id="${listing.item_id}" value="${aliUrl}">
-                  <a href="${searchUrl}" class="auto-link" target="_blank">Search on Ali <i class="fas fa-external-link-alt"></i></a>
               </div>
           </div>`;
   }).join("");
 
-  const listWrapper = document.querySelector(".list-wrapper");
+  const linkWrapper = document.querySelector(".title-link-wrapper");
   document.getElementById("new-items").textContent = noLinkCount; // Update the count in the UI
-  if (noLinkCount === 0 && listWrapper) {
-      listWrapper.style.display = "none"; // Hide if no items need linking
+  if (linkWrapper) {
+    linkWrapper.style.display = noLinkCount === 0 ? "none" : "flex"; // Show if items need linking
   }
-
-  return formattedListings;
+  return formattedListings;  
 }
 
 // Ebay Page
@@ -189,18 +206,17 @@ function formatShippedOrders(orders) {
   return `
     <div class="card">
       <div class="listings">
-        <div class="listing-item header-row">
+        <div class="listing-item shipped-item header-row">
           <span>Image</span>
           <span>Customer</span>
-          <span>SS</span>
           <span>Title</span>
           <span>Variation</span>
           <span>Date</span>
           <span>Qty</span>
           <span>Price / Profit</span>
+          <span>SS</span>
         </div>
         ${orders.map(order => {
-          const profitClass = parseFloat(order.profit) >= 0 ? 'green' : 'red';
           const screenshot = order.shipping_screenshot
             ? `http://82.42.112.27:5000/api/shipping-screenshot/${order.shipping_screenshot}`
             : null;
@@ -209,21 +225,21 @@ function formatShippedOrders(orders) {
             : 'Default';
 
           return `
-            <div class="listing-item">
+            <div class="listing-item shipped-item">
               <img src="${order.ebay_img}" alt="Product">
               <p class="customer-name">${order.full_name}</p>
-              ${screenshot ? `
-              <span class="view-img" onclick="showScreenshot('${screenshot}')">
-                <i class="fas fa-camera"></i>
-              </span>` : '<span></span>'}
               <p class="item-title">${order.item_title}</p>
               <p class="variation-aspects">${variations}</p>
               <span class="date">${order.shipped}</span>
               <span class="quantity">${order.quantity}</span>
               <span class="price">
                 <span id="revenue">£${parseFloat(order.ebay_price).toFixed(2)}</span>
-                <span id="profit" class="${profitClass}">${order.profit >= 0 ? '+' : ''}£${parseFloat(order.profit).toFixed(2)}</span>
+                <span id="profit" class="profit">${order.profit >= 0 ? '+' : ''}£${order.profit}</span>
               </span>
+              ${screenshot ? `
+              <span class="view-img" onclick="showScreenshot('${screenshot}')">
+                <i class="fas fa-camera"></i>
+              </span>` : '<span></span>'}
             </div>
           `;
         }).join('')}
@@ -250,6 +266,33 @@ function showScreenshot(url) {
   });
   document.body.appendChild(m);
 }
+
+// Home shipped orders
+function formatHomeShippedOrders(orders) {
+  const header = `
+    <div class="listing-item home-shipped-item header-row">
+      <span>Listing</span>
+      <span></span>
+      <span>Date</span>
+      <span>Price</span>
+    </div>
+  `;
+  const items = orders.slice(0, 5).map(order => {
+      return `
+          <div class="listing-item home-shipped-item">
+              <img src="${order.ebay_img}" alt="Product">
+              <p class="item-title">${order.item_title}</p>
+              <span class="date">${order.shipped}</span>
+              <span class="price">
+                <span id="revenue">£${parseFloat(order.ebay_price).toFixed(2)}</span>
+                <span id="profit" class="profit xsmall">${order.profit >= 0 ? '+' : ''}£${order.profit}</span>
+              </span>
+          </div>
+      `;
+  }).join('');
+  return header + items;
+}
+
 
 // Server Logs Page
 function formatServerLogs(logs) {

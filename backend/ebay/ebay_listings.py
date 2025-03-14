@@ -74,9 +74,9 @@ def getListings(EBAY_ACCESS_TOKEN, debug):
 def parseListings(all_listings, debug):
     listings_json_path = os.path.join(base_path, "listings.json")
 
-    # ✅ Load existing enriched data if it exists, otherwise empty
+    # ✅ Loads listings.json to retain ali-values
     if os.path.exists(listings_json_path):
-        with open(listings_json_path) as f:
+        with open(listings_json_path, encoding='utf-8') as f:
             existing_data = json.load(f)
         existing_aliexpress = {item.get("item_id", ""): item for item in existing_data}
     else:
@@ -101,9 +101,12 @@ def parseListings(all_listings, debug):
             "variations": {}
         }
 
-        # Handle variations
+        # Handle variations, collecting unique options
         variations = listing.get("Variations", {}).get("Variation", [])
         variations = [variations] if isinstance(variations, dict) else variations
+
+        variation_options = {}  # To collect unique values per variation name
+
         if variations:
             for var in variations:
                 specifics = var.get("VariationSpecifics", {}).get("NameValueList", [])
@@ -111,21 +114,27 @@ def parseListings(all_listings, debug):
                 for s in specifics:
                     name, value = s.get("Name"), s.get("Value")
                     if name and value:
-                        # Link existing ali-value if it exists
-                        existing_var_ali = next(
-                            (v.get("ali-value", "") for v in existing_variations.get(name, []) if v.get("value") == value),
-                            ""
-                        )
-                        filtered["variations"].setdefault(name, []).append({"value": value, "ali-value": existing_var_ali})
+                        # Initialise set for each variation name
+                        variation_options.setdefault(name, set()).add(value)
+
+            # Build final variation structure and link existing ali-values
+            for name, values in variation_options.items():
+                filtered["variations"][name] = []
+                for value in sorted(values):  # Sorted to keep consistent order
+                    existing_var_ali = next(
+                        (v.get("ali-value", "") for v in existing_variations.get(name, []) if v.get("value") == value),
+                        ""
+                    )
+                    filtered["variations"][name].append({"value": value, "ali-value": existing_var_ali})
         else:
-            # If no variations, keep the existing ali-value
+            # If no variations, keep existing ali-value if any
             filtered["ali-value"] = existing_ali_value
 
         filtered_listings.append(filtered)  # Add to final list
 
     # Save parsed listings
-    with open(listings_json_path, 'w') as outfile:
-        json.dump(filtered_listings, outfile, indent=4)
+    with open(listings_json_path, 'w', encoding='utf-8') as outfile:
+        json.dump(filtered_listings, outfile, indent=4, ensure_ascii=False)
 
     if debug:
         print(f"✅ {len(filtered_listings)} listings parsed and saved to listings.json.")

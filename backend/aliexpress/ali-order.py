@@ -147,8 +147,9 @@ while ship_product:
         print("Clicked 'Buy now'")
         time.sleep(wait_time * 3)
     else:
-        print("'Buy now' button not found. Check if item variant sold out.")
+        fail_reason = "'Buy now' button wasn't found. Check if variant out of stock."
         ship_product = False
+        print(fail_reason)
         break
 
     # -----------------------

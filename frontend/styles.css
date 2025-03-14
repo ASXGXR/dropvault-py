@@ -24,6 +24,7 @@ h2,a,p,h1,h3,body,button,input,pre {
   --subtitle-font: 22px;
   --med-font: 16px;
   --small-font: 14px;
+  --xsmall-font: 12px;
 
   /* Colours */
   --green: #55A84A;
@@ -110,13 +111,18 @@ body {
 }
 
 .grid-item {
-  width: 100%; height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 24px;
 }
 
+.grid-container .card {
+  max-width: 36vw;
+}
+
 .card {
+  width: 100%;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
   padding: 12px 20px;
@@ -136,8 +142,8 @@ body {
   grid-row: 1;         /* Top right */
 }
 .weekly-sales .card canvas {
-  max-width: 100%;
-  height: 18vh !important
+  height: 100% !important;
+  width: 100% !important;
 }
 
 .ebay-listings {
@@ -189,19 +195,18 @@ body {
 }
 
 .listings img {
+  object-fit: cover;
   width: 48px;
   height: 48px;
   border-radius: 4px;
 }
 
 .price {
+  gap: 4px;
   font-weight: bold;
   display: flex;
   flex-direction: column;
   text-align: right;
-}
-#profit {
-  font-size: var(--small-font);
 }
 
 .blob1, .blob2 {
@@ -233,7 +238,7 @@ body {
 .titnsub {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 h3    {
@@ -294,11 +299,10 @@ a:hover {
 }
 
 
-#new-items {
+#new-items,#shipping-errors {
   font-weight: bold;
   color: var(--primary-color);
 }
-
 
 
 .link-btn {
@@ -669,47 +673,69 @@ a:hover {
   width: 10%;
   font-weight: bold;
 }
-#shipped-orders .item-title {
-  width: 30%;
-}
-.variation-aspects {
-  width: 10%;
+/* General header row styling */
+.header-row {
   font-weight: 600;
-}
-#shipped-orders .date {
-  width: 10%;
-}
-#shipped-orders .price {
-  width: 10%;
+  height: 40px;
 }
 
-
+/* Screenshot view image button */
 .view-img {
-  display: flex; align-items: center; justify-content: center;
-  width: 32px !important; height: 32px;
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  width: 32px !important; 
+  height: 32px;
   border-radius: 50%;
   cursor: pointer;
   background: rgb(224, 224, 224);
 }
 
-.header-row {
-  font-weight: 600;
-  height: 40px;
-}
-.header-row span {
-  width: 10%; /* Match corresponding elements */
-}
-.header-row span:nth-child(1) { width: 48px; }  /* Image */
-.header-row span:nth-child(2) { width: 10.5%; } /* Customer */
-.header-row span:nth-child(3) { width: 24px; }  /* Screenshot */
-.header-row span:nth-child(4) { width: 30%; } /* Title */
-.header-row span:nth-child(5) { width: 10%; } /* Variation */
-.header-row span:nth-child(6) { width: 10%; } /* Date */
-.header-row span:nth-child(7) { width: 5%; }  /* Qty */
-.header-row span:nth-child(8) { width: 15%; } /* Price/Profit */
-
-
+/* Red error text */
 .fail-reason {
   color: red !important;
   font-weight: bold;
+}
+
+
+
+
+/* Specific column widths matching order */
+
+.shipped-item > *:nth-child(1) { width: 5%; } /* Image */
+.shipped-item > *:nth-child(2) { width: 15%; }  /* Customer */
+.shipped-item > *:nth-child(3) { width: 30%; }  /* Title */
+.shipped-item > *:nth-child(4) { width: 10%; font-weight: 600; } /* Variation */
+.shipped-item > *:nth-child(5) { width: 10%; } /* Date */
+.shipped-item > *:nth-child(6) { width: 5%; }  /* Qty */
+.shipped-item > *:nth-child(7) { width: 10%; text-align: right;} /* Price/Profit */
+.shipped-item > *:nth-child(8) { width: 24px; text-align: right; margin-left: 24px;} /* Screenshot */
+
+
+
+.title-error-wrapper,
+.title-link-wrapper {
+  display: none;
+}
+
+.xsmall {
+  font-size: var(--xsmall-font)
+}
+.profit {
+  font-size: var(--xsmall-font);
+  color: var(--green);
+  font-weight: 500;
+}
+
+
+/* Home shipped orders specific column widths */
+.home-shipped-item > *:nth-child(1) { width: 12%; } /* Image */
+.home-shipped-item > *:nth-child(2) { width: 50%; } /* Title */
+.home-shipped-item > *:nth-child(3) { width: 25%; } /* Date */
+.home-shipped-item > *:nth-child(4) { width: 13%; text-align: right; } /* Qty */
+
+
+.chart-card {
+  height: 100%;
+  max-height: 28.6vh;
 }

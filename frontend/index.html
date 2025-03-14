@@ -21,12 +21,18 @@
   <div class="dashboard" id="dashboard">
 
       <div class="title-wrapper">
-          <h1>Dashboard</h1>
-          <div class="list-wrapper">
+        <h1>Dashboard</h1>
+        <div class="list-wrapper">
+          <div class="title-link-wrapper list-wrapper">
             <span><span id="new-items">1</span> ebay item(s) to link</span>
             <button class="add-listing main-btn" onclick="openPage('ebay-listings.html')">+  Link Listings</button>
           </div>
-      </div>
+          <div class="title-error-wrapper list-wrapper">
+            <span><span id="shipping-errors">0</span> error(s) in shipping</span>
+            <button class="add-listing main-btn" onclick="openPage('ebay-listings.html')">Fix Errors</button>
+          </div>
+        </div>
+      </div>  
       <div class="horiz-line"></div>
       <div class="grid-container">
 
@@ -34,21 +40,11 @@
           <div class="recently-shipped grid-item">
             <div class="titnsub">
               <h2 class="card-title">Shipped Items</h2>
+              <h3 class="card-subtitle"><span class="ship-items green"><span id="weekly-items">0</span> items </span>items shipped by DV in the past 7 days.</h3>  
             </div>
             <div class="card shipped-home">
                 <div class="listings">
-                  <p class="text-center">No Items Recently Shipped</p>
-                  <!-- Example Item -->
-                  <!-- <div class="listing-item">
-                    <img src="images/product-img1.png" alt="Product">
-                    <p>1:24 BMW M4 G82 Coupe Diecast Model Car - Alloy Sports Car - Sound & Light</p> -->
-                    <!-- Day, Month, Year -->
-                    <!-- <span class="date">10/02/2024 - 10:43 AM</span> 
-                    <span class="price"> 
-                      <span id="revenue">£26.00</span>
-                      <span id="profit" class="green">+£8.99</span>
-                    </span>
-                  </div> -->
+                  <div id="home-shipped-orders"><p class="text-center">No Items Recently Shipped</p></div>
                   <!-- Repeat for more items -->
                   <a class="view-all-btn" onclick="openPage('shipped-orders.html')">View All ></a>
                 </div>
@@ -58,8 +54,7 @@
         <!-- Weekly Sales -->
         <div class="weekly-sales grid-item">
           <h2 class="card-title">Total Profit:<span class="green" id="total-profit"> £0</span></h2>
-          <h3 class="card-subtitle"><span class="ship-items green"><span id="weekly-items">0</span> items </span>items shipped by DV in the past 7 days.</h3>  
-          <div class="card">
+          <div class="card chart-card">
               <canvas id="weeklySalesChart"></canvas>
           </div>
         </div>
