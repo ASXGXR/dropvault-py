@@ -1,4 +1,7 @@
+# Ignore all .txt, .yml, .json files and .vercel folder
 *.txt
 *.yml
 *.json
-.vercel
+
+# But do NOT ignore listings.json
+!listings.json

@@ -3,6 +3,7 @@ import requests
 import os
 
 # python backend/ebay/refresh-access-token.py
+debug = False
 
 # eBay OAuth token endpoint
 TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
@@ -29,7 +30,8 @@ response = requests.post(TOKEN_URL, headers=headers, data=data, auth=(CLIENT_ID,
 # Handle response
 if response.status_code == 200:
     new_access_token = response.json()["access_token"]
-    print(f"New access token saved to file.")
+    if debug:
+        print(f"New access token saved to file.")
     os.chdir(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay")
     with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\a_token.txt", 'w') as f:
       f.write(new_access_token)

@@ -19,7 +19,8 @@ script_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\bac
 with open(token_file, "r") as file:
     last_refresh_time = datetime.strptime(file.read().strip(), "%Y-%m-%d %H:%M:%S")
 if current_time > last_refresh_time + timedelta(hours=hour_pass):
-    print("Refreshing access token...")
+    if debug:
+        print("Refreshing access token...")
     with open(script_file, "r") as script:
         exec(script.read(), globals())
     time.sleep(2)

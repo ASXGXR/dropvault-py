@@ -48,13 +48,15 @@ function loadSeparatePages() {
 }
 function logFailedOrdersCount() {
   fetch('http://82.42.112.27:5000/api/failed-shipments')
-      .then(res => res.json())
-      .then(data => {
-          console.log(`Failed Orders Count: ${data.length}`);
-          const el = document.getElementById('failed_shipments');
-          if (el) el.innerHTML = data.length ? `<span class="notif">${data.length}</span>` : '';
-      })
-      .catch(err => console.error(err));
+    .then(res => res.json())
+    .then(data => {
+      console.log(`Failed Orders Count: ${data.length}`);
+      const el = document.getElementById('failed_shipments');
+      const errorNav = document.getElementById('error-nav');
+      if (el) el.innerHTML = data.length ? `<span class="notif">${data.length}</span>` : '';
+      if (errorNav) errorNav.style.display = data.length ? 'block' : 'none';
+    })
+    .catch(console.error);
 }
 
 /**

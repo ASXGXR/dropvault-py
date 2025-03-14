@@ -214,12 +214,12 @@ while ship_product:
     # -----------------------
     # Set Quantity
     # -----------------------
-    pyautogui.press("tab", presses=4, interval=0.3)
-    if quantity != 1:
+    if quantity > 1:
+        pyautogui.press("tab", presses=4, interval=0.3)
+        # enter quantity
         pyautogui.write(str(quantity))
         pyautogui.press("tab")
-        time.sleep(wait_time * 5)  # Wait for price update
-    pyautogui.press("tab")
+        time.sleep(wait_time * 4)  # Wait for price to update
 
     # -----------------------
     # Take Screenshot
@@ -237,7 +237,7 @@ while ship_product:
             x += 446
             box = (x - 67, y - 20, x + 34, y + 20)
             screenshot = pyautogui.screenshot(region=(box[0], box[1], box[2] - box[0], box[3] - box[1]))
-            screenshot.save("ali-price.png")
+            # screenshot.save("ali-price.png")
             ali_price_str = re.sub(r"[^\d.]", "", pt.ocr(box))
             ali_price = float(ali_price_str) if ali_price_str else 0.0
             profit = round(ebay_price - ali_price, 2)
@@ -248,12 +248,33 @@ while ship_product:
     except Exception as e:
         print(e)
         profit = ali_price = 0.0
-
+    
+    # -----------------------
+    # Click 'Pay Now'
+    # -----------------------
+    start_time = time.time()
+    pay_now_loc = None
+    while not pay_now_loc and time.time() - start_time < 15:
+        try:
+            pay_now_loc = pyautogui.locateOnScreen(
+                r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\pay_now_ref.png",
+                confidence=0.8
+            )
+        except: pass
+        time.sleep(wait_time)
+    if pay_now_loc:
+        pyautogui.click(*pyautogui.center(pay_now_loc))
+        print("Clicked 'Pay now'")
+        time.sleep(wait_time * 3)
+    else:
+        ship_product = False
+        fail_reason = "Couldn't Locate 'Pay Now' Button"
+    start_time = time.time()
 
     # -----------------------
     # Save Order to File
     # -----------------------
-    # Add ebay img
+    # Get ebay img
     ebay_url = f"https://www.ebay.co.uk/itm/{item_id}?var={order_info['variation_id']}"
     ebay_img = get_ebay_image(ebay_url)
     print("Ebay image saved")
@@ -279,6 +300,9 @@ while ship_product:
     with open(shipped_orders_path, "w", encoding="utf-8") as f:
         json.dump(orders, f, indent=4)
     print("Order saved to shipped_orders.json")
+
+    while time.time() < start_time + (wait_time*6): # wait for order to process
+        time.sleep(1)
     pt.hotkey(ctrl_key, "w")  # Close tab
 
     # ---------------------------
