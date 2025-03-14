@@ -1,4 +1,3 @@
-import os
 import json
 import time
 import subprocess
@@ -6,17 +5,9 @@ from ebay.get_access_token import getAccessToken
 from ebay.ebay_listings import getListings
 from ebay.ebay_orders import getOrders
 
-#############
-##  PATHS  ##
-#############
-
 ebay_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay"
 ali_order_script = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\ali-order.py"
 pause_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\pause.txt"
-
-##################
-##  AUTOMATION  ##
-##################
 
 print("**Starting up..")
 
@@ -30,20 +21,19 @@ while True:
         print(f"🕒  Current Time: {time.strftime('%d-%m-%Y %H:%M:%S')}")
         last_time_printed = time.time()
 
-    # Get eBay Access Token
+    # Get Access Token
     access_token = getAccessToken()
 
     # Fetch & Save Listings
     getListings(access_token,debug)
-    # Fetch & Save Orders
+    # Fetch Orders
     orders = getOrders(access_token,debug)
 
-    # Print order info on first loop
-    if not orders_printed:
-        print(f"** {len(orders)} Orders Received & Parsed **")
-        print("\n" + "=" * 40)
+    if not orders_printed: 
+        print(f"**{len(orders)} Orders Received & Parsed")
+        print("\n" + "="*36)
         print("🔄  DropVault Automation Started")
-        print("=" * 40 + "\n")
+        print("="*36 + "\n")
         orders_printed = True
 
     # Process each order

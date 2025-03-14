@@ -8,7 +8,7 @@ base_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backe
 ##  GET LISTINGS  ##
 ####################
 
-def getListings(EBAY_ACCESS_TOKEN,debug):
+def getListings(EBAY_ACCESS_TOKEN, debug):
     try:
         # eBay API credentials
         EBAY_APP_ID = 'AlexSaga-DropVaul-PRD-5deb947bc-5f49e26a'
@@ -44,6 +44,7 @@ def getListings(EBAY_ACCESS_TOKEN,debug):
             if isinstance(items, dict):
                 items = [items]
             all_listings.extend(items)
+
             # Stop if last page
             total_pages = int(data.get('ActiveList', {}).get('PaginationResult', {}).get('TotalNumberOfPages', 1))
             if page >= total_pages:
@@ -59,7 +60,7 @@ def getListings(EBAY_ACCESS_TOKEN,debug):
             print(f"✅ {len(all_listings)} listings retrieved and saved to raw_listings.json.")
 
         # Return Parsed Listings
-        return parseListings(all_listings,debug)
+        return parseListings(all_listings, debug)
 
     except Exception as e:
         print(f"[ERROR] Unable to retrieve eBay listings: {e}")
@@ -70,9 +71,16 @@ def getListings(EBAY_ACCESS_TOKEN,debug):
 ##  PARSE LISTINGS  ##
 ######################
 
-def parseListings(all_listings,debug):
+def parseListings(all_listings, debug):
     listings_json_path = os.path.join(base_path, "listings.json")
-    existing_aliexpress = {item.get("item_id", ""): item for item in all_listings}  # Index by item_id
+
+    # ✅ Load existing enriched data if it exists, otherwise empty
+    if os.path.exists(listings_json_path):
+        with open(listings_json_path) as f:
+            existing_data = json.load(f)
+        existing_aliexpress = {item.get("item_id", ""): item for item in existing_data}
+    else:
+        existing_aliexpress = {}
 
     filtered_listings = []
 
@@ -103,11 +111,15 @@ def parseListings(all_listings,debug):
                 for s in specifics:
                     name, value = s.get("Name"), s.get("Value")
                     if name and value:
-                        # Link existing ali-value if exists
-                        existing_var_ali = next((v.get("ali-value", "") for v in existing_variations.get(name, []) if v.get("value") == value), "")
+                        # Link existing ali-value if it exists
+                        existing_var_ali = next(
+                            (v.get("ali-value", "") for v in existing_variations.get(name, []) if v.get("value") == value),
+                            ""
+                        )
                         filtered["variations"].setdefault(name, []).append({"value": value, "ali-value": existing_var_ali})
         else:
-            filtered["ali-value"] = existing_ali_value  # No variations case
+            # If no variations, keep the existing ali-value
+            filtered["ali-value"] = existing_ali_value
 
         filtered_listings.append(filtered)  # Add to final list
 
@@ -116,4 +128,6 @@ def parseListings(all_listings,debug):
         json.dump(filtered_listings, outfile, indent=4)
 
     if debug:
-        print(f"{len(filtered_listings)} listings parsed and saved.")
+        print(f"✅ {len(filtered_listings)} listings parsed and saved to listings.json.")
+
+    return filtered_listings
