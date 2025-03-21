@@ -434,7 +434,7 @@ def makeAliOrder(order_info):
                         <p style="margin-top: 20px;">📌 <em>Please check the failed shipments log for further details.</em></p>
 
                         <a href="{product_url if product_url else '#'}" class="button ali-button">AliExpress Item</a>
-                        <a href="https://tinyurl.com/droppvault" class="button dropvault-button">View on DropVault</a>
+                        <a href="https://dropvault.short.gy" class="button dropvault-button">View on DropVault</a>
                     </div>
                 </body>
                 </html>

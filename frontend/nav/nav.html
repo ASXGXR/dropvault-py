@@ -1,58 +1,51 @@
 <!-- nav.html -->
-<nav id="nav">
-  <!-- NAV LOGO -->
-  <button class="nav-logo" onclick="openPage('main')">
-    <img src="images/logo.svg" alt="Logo">
-  </button>
-  <div class="nav-buttons">
-    <button class="nav-btn active-nav" onclick="openPage('main')">Dashboard</button>
-    <button class="nav-btn" onclick="openPage('shipped-orders.html')">Shipped Items</button>
-    <button class="nav-btn" onclick="openPage('ebay-listings.html')">Ebay Listings</button>
-    <button id="error-nav" class="nav-btn" onclick="openPage('server-logs.html')">Order Errors <span id="failed_shipments"></span></button>
-  </div>
-  <!-- PAGE BUTTONS -->
-  <div class="log-sign">
-    <!-- <button class="nav-btn nav-border">Log In</button> -->
-     Hey, Angus! 👋
-  </div>
 
-  <!-- Hamburger icon -->
-  <div class="hamburger">
-    <span></span>
-    <span></span>
-    <span></span>
-    <style>
-      .hamburger {
-        padding: 12px;
-        padding-right: 0;
-        gap: 8px;
-        display: none;
-        cursor: pointer;
-        flex-direction: column;
-      }
-      .hamburger span {
-        width: 24px;
-        height: 2px;
-        background-color: var(--black);
-        transition: transform 0.3s ease, opacity 0.3s ease;
-      }
-      
-      /* Turning Hamburger into X */
-      .hamburger.hamburger--open span:nth-child(1) {
-        transform: rotate(45deg) translate(7px, 7px);
-      }
-      .hamburger.hamburger--open span:nth-child(2) {
-        opacity: 0; /* Hide the middle bar */
-      }
-      .hamburger.hamburger--open span:nth-child(3) {
-        transform: rotate(-45deg) translate(7px, -7px);
-      }
-    </style>
-  </div>
-
-</nav>
+<!-- NAV LOGO -->
+<button class="nav-logo" onclick="openPage('main')">
+  <img src="images/logo.svg" alt="Logo">
+</button>
+<div class="nav-buttons">
+  <button class="nav-btn active-nav" onclick="openPage('main')">Dashboard</button>
+  <button class="nav-btn" onclick="openPage('shipped-orders.html')">Shipped Items</button>
+  <button class="nav-btn" onclick="openPage('ebay-listings.html')">Ebay Listings</button>
+  <button id="error-nav" class="nav-btn" onclick="openPage('server-logs.html')">Order Errors <span id="failed_shipments"></span></button>
+</div>
+<div class="log-sign">
+  Hey, Angus! 👋
+</div>
 
 <style>
+
+  .hamburger {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1100;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    cursor: pointer;
+  }
+  .hamburger span {
+    width: 24px;
+    height: 2px;
+    background-color: var(--grey);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  .hamburger.hamburger--open span:nth-child(1) {
+    transform: rotate(45deg) translate(7px, 7px);
+  }
+  .hamburger.hamburger--open span:nth-child(2) {
+    opacity: 0;
+  }
+  .hamburger.hamburger--open span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  .nav-wrapper {
+    position: relative;
+  }
 
   nav {
     border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important;
@@ -66,7 +59,7 @@
     height: 100vh !important; width: 100%;
 
     /* Sticky Nav */
-    z-index: 10;
+    z-index: 1000;
     transition: top 0.4s;
     background: var(--page-bg);
     box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.04);
@@ -90,12 +83,12 @@
     cursor: pointer;
   }
 
-  .nav-btn:hover {
-    color: var(--primary-color);
+  button.nav-btn {
+    color: inherit;
   }
 
-  .nav-border {
-    border: 2px solid black;
+  .nav-btn:hover {
+    color: var(--primary-color);
   }
 
   .nav-logo {
@@ -113,54 +106,46 @@
 
   /* Media query for smaller screens */
   @media (max-width: 768px) {
-    .nav-buttons {
-      display: flex;
-      flex-direction: column;
-      position: absolute;
-      top: var(--nav-height);
-      right: 0;
-      background-color: var(--white);
-      width: 100%;
-      padding: 0;
-      margin: 0;
-      z-index: 10000;
-      overflow: hidden;
 
-      /* Smooth transition */
-      max-height: 0; 
-      transition: max-height 0.4s ease-out;
+    nav {
+      will-change: transform;
+      backface-visibility: hidden;
+      top: 0;
+      left: 0;
+      height: 100vh; width: 80vw;
+      max-width: 300px;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease-in-out;
+      position: fixed;
+      box-shadow: 4px 0 8px rgba(0,0,0,0.1);
     }
-    .nav-buttons.nav-buttons--open {
-      max-height: calc(100vh - var(--nav-height));
+
+    nav.nav--open {
+      transform: translateX(0);
     }
+
     .hamburger {
+      top: var(--top-padding); right: var(--side-padding);
+      padding: 3%;
+      margin: 0 -12px;
       display: flex;
+      position: fixed;
+      z-index: 1100;
+    }
+
+    .nav-buttons {
+      width: 100%;
     }
     .nav-btn {
-      padding: 32px;
-      font-size: 18px;
-      border-bottom: 1px solid #ccc;
+      font-size: var(--lg-font);
     }
-    .nav-btn:last-child {
-      border-bottom: none;
-    }
-
 
     /* nav logo */
 
-    .logo-text {
-      font-size: 10px;
-    }
-    .nav-logo {
-      padding: 0;
-      margin: 0;
-      width: 28%;
-      min-width: 88px;
-      border-bottom: none;
-    }
     .nav-logo img {
       width: 84px;
     }
+
   }
 
 

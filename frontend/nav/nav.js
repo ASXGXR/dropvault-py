@@ -2,58 +2,50 @@
 const navbarElement = document.getElementById('navbar');
 
 fetch('nav/nav.html')
-.then(response => response.text())
-.then(data => {
+  .then(response => response.text())
+  .then(data => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = data;
 
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = data;
-  const navElement = tempDiv.querySelector('nav');
-  navbarElement.innerHTML = navElement ? navElement.innerHTML : data;
+    // Append any <style> tags from nav.html to <head>
+    tempDiv.querySelectorAll('style').forEach(styleEl => {
+      document.head.appendChild(styleEl);
+    });
 
-  // Append any <style> elements (outside <nav>) to the document head
-  tempDiv.querySelectorAll('style').forEach(styleEl => {
-    document.head.appendChild(styleEl);
-  });
+    // Inject full nav HTML into #navbar
+    navbarElement.innerHTML = tempDiv.innerHTML;
 
-  const navButtons = navbarElement.querySelector('.nav-buttons');
+    // Select elements
+    const nav = navbarElement;
+    const navButtons = nav.querySelector('.nav-buttons');
+    const navItems = navButtons.querySelectorAll('.nav-btn');
 
-  // HIGHLIGHT PAGE USER IS ON
-  const currentPath = window.location.pathname;
-  const navItems = navButtons.querySelectorAll('.nav-btn');
-  navItems.forEach(navItem => {
-    let itemPath = navItem.tagName.toLowerCase() === 'a' ? navItem.getAttribute('href') : null;
-    if (itemPath && (itemPath.startsWith('http') || itemPath.startsWith('//'))) {
-      itemPath = new URL(itemPath, window.location.origin).pathname;
-    }
-    if (itemPath === currentPath) {
-      navItem.classList.add('active-nav-item');
-    }
-  });
+    // Get hamburger from main HTML (outside nav)
+    const hamburger = document.querySelector('.hamburger');
 
-  // ADD CLICK EVENT LISTENERS
-  navItems.forEach(navItem => {
-    if (navItem.tagName.toLowerCase() === 'button') {
-      const page = navItem.getAttribute('data-page');
-      if (page) {
-        navItem.addEventListener('click', () => {
-          window.location.href = page;
-        });
+    // Highlight current page
+    const currentPath = window.location.pathname;
+    navItems.forEach(navItem => {
+      let itemPath = navItem.tagName.toLowerCase() === 'a' ? navItem.getAttribute('href') : null;
+      if (itemPath && (itemPath.startsWith('http') || itemPath.startsWith('//'))) {
+        itemPath = new URL(itemPath, window.location.origin).pathname;
       }
-    }
-  });
+      if (itemPath === currentPath) {
+        navItem.classList.add('active-nav-item');
+      }
+    });
 
-  // HAMBURGER CODE
-  const hamburger = document.querySelector('.hamburger');
-  hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('hamburger--open');
-    navButtons.classList.toggle('nav-buttons--open');
-  });
+    // Toggle nav on hamburger click
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('hamburger--open');
+      nav.classList.toggle('nav--open');
+    });
 
-  // Close nav-buttons on click (Mobile)
-  navItems.forEach(navItem => {
-    navItem.addEventListener('click', () => {
-      navButtons.classList.remove('nav-buttons--open');
-      hamburger.classList.remove('hamburger--open');
+    // Close nav on mobile after clicking a nav button
+    navItems.forEach(navItem => {
+      navItem.addEventListener('click', () => {
+        hamburger.classList.remove('hamburger--open');
+        nav.classList.remove('nav--open');
+      });
     });
   });
-});

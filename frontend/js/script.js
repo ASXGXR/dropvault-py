@@ -169,14 +169,12 @@ function formatEbayListings(listings) {
             <a href="${aliUrl}" class="auto-link fas fa-external-link-alt" target="_blank"></a>
           </span>
 
-          <span>
-            ${aliUrl ? ` 
-              <div class="variants-wrapper">
-                <span class="variation-icons">${variationsHTML}</span>
-                ${unlinkedCount > 0 ? `<a href="${aliUrl}" class="unlinked-count" target="_blank">${unlinkedCount} variants unlinked</a>` : ''}
-                ${unlinkedCount === 0 ? `<div class="linked-tick">✔</div>` : ''}
-              </div>` : ''}
-          </span>
+          ${aliUrl ? ` 
+            <div class="variants-wrapper">
+              <span class="variation-icons">${variationsHTML}</span>
+              ${unlinkedCount > 0 ? `<a href="${aliUrl}" class="unlinked-count" target="_blank">${unlinkedCount} variants unlinked</a>` : ''}
+              ${unlinkedCount === 0 ? `<div class="linked-tick">✔</div>` : ''}
+            </div>` : ''}
         </div>`;
       }).join('')}
     </div>
@@ -227,9 +225,9 @@ function formatShippedOrders(orders) {
     <div class="card">
       <div class="listings">
         <div class="listing-item shipped-item header-row">
-          <span>Image</span>
+          <span>Shipped Item</span>
+          <span></span>
           <span>Customer</span>
-          <span>Item</span>
           <span>Variant</span>
           <span>Date</span>
           <span>Qty</span>
@@ -254,8 +252,8 @@ function formatShippedOrders(orders) {
           return `
             <div class="listing-item shipped-item">
               <img src="${ebayImg}" alt="Product">
-              <p class="customer-name">${fullName}</p>
               <p class="item-title">${itemTitle}</p>
+              <p class="customer-name">${fullName}</p>
               <p class="variation-aspects">${variations}</p>
               <span class="date">${shippedDate}</span>
               <span class="quantity">${quantity}</span>

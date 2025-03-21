@@ -22,6 +22,7 @@ h1,h2,a,p,h1,h3,body,button,input,pre {
   --primary-font: "Onest", sans-serif;
   --title-font: 2em;
   --subtitle-font: 22px;
+  --lg-font: 18px;
   --med-font: 16px;
   --small-font: 14px;
   --xsmall-font: 12px;
@@ -382,8 +383,8 @@ a:hover {
   opacity: 0.2;
 }
 
-.active-nav {
-  color: var(--primary-color);
+.nav-btn.active-nav {
+  color: var(--primary-color) !important;
 }
 .red80 {
   color: var(--primary-color80);
@@ -633,8 +634,8 @@ a:hover {
 }
 
 
-
 #screenshot-modal {
+  z-index: 20000;
   position: fixed;
   top: 0;
   left: 0;
@@ -644,7 +645,6 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
 }
 
 #screenshot-modal .modal-content {
@@ -712,6 +712,13 @@ a:hover {
 .shipped-item > *:nth-child(7) { width: 5%; text-align: right;} /* Price/Profit */
 .shipped-item > *:nth-child(8) { width: 24px; text-align: right; margin-left: 24px;} /* Screenshot */
 
+@media (max-width: 768px) {
+  .shipped-item > *:nth-child(1) { width: 8%; } /* Image */
+  .shipped-item > *:nth-child(2) { width: 8%; }  /* Title */
+  .shipped-item > *:nth-child(5) { width: 12%; } /* Date */
+  .shipped-item > *:nth-child(7) { display: none; } /* Price/Profit */
+}
+
 
 /* ERROR LOG PAGE */
 
@@ -731,6 +738,11 @@ a:hover {
 .ebay-item > *:nth-child(4) { width: 30%; } /* AliExpress Link */
 .ebay-item > *:nth-child(5) { width: 15%; text-align: center; } /* Variants */
 
+@media (max-width: 768px) {
+  .ebay-item > *:nth-child(2) { width: 20%; } /* Ebay Title */
+  .ebay-item > *:nth-child(3) { display: none; } /* Price */
+  .ebay-item > *:nth-child(5) { width: 25%; text-align: right; } /* Variants */
+}
 
 .header-row > * {
   white-space: nowrap;
@@ -785,9 +797,9 @@ a:hover {
   .weekly-sales {
     order: -1;
   }
-  nav {
+  /* nav {
     display: none !important;
-  }
+  } */
   .title-link-wrapper {
     display: none;
   }
