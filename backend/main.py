@@ -1,64 +1,59 @@
 import json
 import time
-import subprocess
 from ebay.get_access_token import getAccessToken
 from ebay.ebay_listings import getListings
 from ebay.ebay_orders import getOrders
+from aliexpress.ali_order import makeAliOrder
 
+# --- File Paths  ---
 ebay_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay"
-ali_order_script = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\ali-order.py"
 pause_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\pause.txt"
 
-print("**Starting up..")
+# --- Initial Setup ---
+print("**Starting up..")  # Show startup message
+debug = False           # Debug mode toggle (False = off)
+orders_printed = False  # Track if orders summary has been printed
+last_time_printed = time.time()  # Last time the clock was printed
+minute_gap = 10         # Minutes to wait between each full cycle
 
-debug = False
-orders_printed = False
-last_time_printed = time.time()
-
+# --- Main Loop (runs forever) ---
 while True:
-    # Print current time every 2 hours
-    if time.time() - last_time_printed >= 2 * 60 * 60:
-        print(f"🕒  Current Time: {time.strftime('%d-%m-%Y %H:%M:%S')}")
-        last_time_printed = time.time()
+    start_time = time.time()  # Records when cycle started
 
-    # Get Access Token
+    # Print current time every 2 hours
+    if start_time - last_time_printed >= 7200:
+        print(f"🕒  Current Time: {time.strftime('%d-%m-%Y %H:%M:%S')}")
+        last_time_printed = start_time
+
+    # --- STEP 1: Get eBay Access Token ---
     access_token = getAccessToken()
 
-    # Fetch & Save Listings
-    getListings(access_token,debug)
-    # Fetch Orders
-    orders = getOrders(access_token,debug)
+    # --- STEP 2: Get eBay Listings and Orders ---
+    getListings(access_token, debug)        # Download current listings
+    orders = getOrders(access_token, debug) # Download recent orders
 
-    if not orders_printed: 
+    # --- STEP 3: Print summary of orders (only once after starting) ---
+    if not orders_printed:
         print(f"**{len(orders)} Orders Received & Parsed")
-        print("\n" + "="*36)
+        print("\n" + "=" * 36)
         print("🔄  DropVault Automation Started")
-        print("="*36 + "\n")
+        print("=" * 36 + "\n")
         orders_printed = True
 
-    # Process each order
+    # --- STEP 4: Process each order (send to AliExpress script) ---
     for order in orders:
-        order_json = json.dumps(order)
-        subprocess.run(["python", ali_order_script, order_json], check=True)
+        makeAliOrder(order) # Run AliExpress order script
 
-    ###############################
-    ##  LOOP WAIT & PAUSE LOGIC  ##
-    ###############################
-
-    minute_gap = 10  # Minutes between each run
-    wait_seconds = minute_gap * 60
-    start_time = time.time()
-
-    while (time.time() - start_time) < wait_seconds:
-        # Check pause.txt file for pause signal
-        with open(pause_dir, "r") as pause_file:
-            if pause_file.read().strip():
+    # --- STEP 5: Wait until next run, but check pause.txt file ---
+    while (time.time() - start_time) < (minute_gap * 60):
+        with open(pause_dir, "r") as f:
+            if f.read().strip():  # If pause.txt has content, pause script
                 print("⏸️  Script Paused. Remove contents of pause.txt to continue.")
-                # Pause loop until pause.txt is cleared
+                # Stay paused until pause.txt is cleared
                 while True:
-                    time.sleep(5)  # Check every 5 seconds
-                    with open(pause_dir, "r") as pause_file_inner:
-                        if not pause_file_inner.read().strip():
+                    time.sleep(5)  # Check pause.txt every 5 seconds
+                    with open(pause_dir, "r") as pause_file:
+                        if not pause_file.read().strip():  # If pause.txt is empty, resume
                             print("▶️  Resuming Script...\n")
                             break
-        time.sleep(5)  # Small delay to prevent high CPU usage
+        time.sleep(5)  # Short delay to prevent overloading the CPU

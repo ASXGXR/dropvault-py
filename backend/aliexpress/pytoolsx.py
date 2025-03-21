@@ -22,8 +22,8 @@ import tkinter as tk
 # ========================
 
 def send_mail(subject, body, email_receiver='alexsagar13@gmail.com',
-              email_sender = 'ceostockgrabber@gmail.com',
-              email_password = ''):
+              email_sender='ceostockgrabber@gmail.com',
+              email_password='adxdaqyvrjinqejk'):
     """Sends an email to the specified receiver with the given subject and body."""
     sendmail_counter = 0
     sendmail_max_count = 5
@@ -33,7 +33,7 @@ def send_mail(subject, body, email_receiver='alexsagar13@gmail.com',
             em['From'] = email_sender
             em['To'] = email_receiver
             em['Subject'] = subject
-            em.set_content(body)
+            em.set_content(body, subtype='html')  # Set content as HTML
 
             context = ssl.create_default_context()
             with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
@@ -196,9 +196,9 @@ def findOnPage(target_text, debug=False, invert=False, loop=False, area=None, ti
                 print(f"None of the texts '{targets}' were found.")
             return None
 
-def clickFindOnPage(target_text, debug=False, invert=False, loop=False):
+def clickFindOnPage(target_text, debug=False, invert=False, loop=False, area=None, timeout=None):
     """Finds and clicks on the specified text on a page."""
-    coords = findOnPage(target_text, debug=debug, invert=invert, loop=loop)
+    coords = findOnPage(target_text, debug, invert, loop, area, timeout)
     if coords:
         if debug:
             print(f"Clicking at coordinates: {coords}")

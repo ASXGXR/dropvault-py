@@ -8,7 +8,7 @@
     <button class="nav-btn active-nav" onclick="openPage('main')">Dashboard</button>
     <button class="nav-btn" onclick="openPage('shipped-orders.html')">Shipped Items</button>
     <button class="nav-btn" onclick="openPage('ebay-listings.html')">Ebay Listings</button>
-    <button id="error-nav" class="nav-btn" onclick="openPage('server-logs.html')">Error Logs <span id="failed_shipments"></span></button>
+    <button id="error-nav" class="nav-btn" onclick="openPage('server-logs.html')">Order Errors <span id="failed_shipments"></span></button>
   </div>
   <!-- PAGE BUTTONS -->
   <div class="log-sign">
@@ -55,6 +55,7 @@
 <style>
 
   nav {
+    border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important;
     max-width: 254px;
     justify-content: space-between;
     height: var(--nav-height);

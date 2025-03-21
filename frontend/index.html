@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DropVault - Dashboard</title>
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/script.js"></script>
 </head>
 <body>
   
@@ -23,13 +23,13 @@
       <div class="title-wrapper">
         <h1>Dashboard</h1>
         <div class="list-wrapper">
+          <div class="title-error-wrapper list-wrapper">
+            <span><span id="shipping-errors">0</span> error(s) in shipping</span>
+            <button class="add-listing main-btn" onclick="openPage('server-logs.html')">Fix Error(s)</button>
+          </div>
           <div class="title-link-wrapper list-wrapper">
             <span><span id="new-items">1</span> ebay item(s) to link</span>
             <button class="add-listing main-btn" onclick="openPage('ebay-listings.html')">+  Link Listings</button>
-          </div>
-          <div class="title-error-wrapper list-wrapper">
-            <span><span id="shipping-errors">0</span> error(s) in shipping</span>
-            <button class="add-listing main-btn" onclick="openPage('ebay-listings.html')">Fix Errors</button>
           </div>
         </div>
       </div>  
@@ -40,7 +40,7 @@
           <div class="recently-shipped grid-item">
             <div class="titnsub">
               <h2 class="card-title">Shipped Items</h2>
-              <h3 class="card-subtitle"><span class="ship-items green"><span id="weekly-items">0</span> items </span>items shipped by DV in the past 7 days.</h3>  
+              <h3 class="card-subtitle"><span id="weekly-items" class="green">0 items</span> shipped by DV in the past 7 days.</h3>  
             </div>
             <div class="card shipped-home">
                 <div class="listings">

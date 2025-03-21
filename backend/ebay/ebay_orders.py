@@ -2,6 +2,7 @@ import requests
 import json
 import re
 import os
+import string
 
 #########################
 ##  GETTING ORDERS     ##
@@ -47,7 +48,18 @@ def parseOrders(orders,debug):
     # Helper functions
     # ----------------------
     def format_words(text):
-        return " ".join(word.capitalize() for word in re.sub(r"[.,]", "", text).strip().split()) if isinstance(text, str) else ""
+        # Removes periods and commas, then capitalizes each word
+        if not isinstance(text, str):
+            return ""
+        text = re.sub(r"[.,]", "", text).strip()
+        return " ".join(word.capitalize() for word in text.split())
+
+    def english_only(text):
+        # Keep only English letters, spaces, hyphens, apostrophes, periods, and capitalize words
+        if not isinstance(text, str):
+            return ""
+        clean = re.sub(r"[^A-Za-z\s\-'.]", "", text).strip()
+        return " ".join(word.capitalize() for word in clean.split())
 
     def validate_and_format_postcode(postcode):
         """Format UK postcode using API, fallback to original if error."""
@@ -77,15 +89,19 @@ def parseOrders(orders,debug):
             print(f"[Skipped] Order {order.get('orderId', 'Unknown')} missing: {', '.join(missing)}")
             continue
 
+        # Format name
+        names = english_only(ship_to["fullName"]).split() or ["TT", "TT"]
+        full_name = " ".join([n*2 if len(n) == 1 else n for n in names]) # If name len=1, duplicate letter
+
         # Format address
         formatted_postcode = validate_and_format_postcode(addr.get("postalCode", ""))
         address_line2 = " ".join(word for word in addr.get("addressLine2", "").split() if "ebay" not in word.lower())
 
-        # Parse line items
+        # Parse items
         for item in order.get("lineItems", []):
             parsed_orders.append({
                 "order_id": order.get("orderId", ""),
-                "full_name": format_words(ship_to["fullName"]),
+                "full_name": full_name,
                 "address_line1": format_words(addr["addressLine1"]),
                 "address_line2": address_line2,
                 "city": format_words(addr["city"]),
