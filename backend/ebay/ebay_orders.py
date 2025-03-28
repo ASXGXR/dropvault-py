@@ -82,7 +82,8 @@ def parseOrders(orders,debug):
         # Check required fields
         required_fields = ["fullName", "addressLine1", "city", "postalCode", "countryCode"]
         missing = [field for field in required_fields if not (ship_to.get(field) or addr.get(field))]
-        if not ship_to.get("primaryPhone", {}).get("phoneNumber"):
+        phone_number = ship_to.get("primaryPhone", {}).get("phoneNumber") or order.get("buyer", {}).get("buyerRegistrationAddress", {}).get("primaryPhone", {}).get("phoneNumber")
+        if not phone_number:
             missing.append("phoneNumber")
 
         if missing:
@@ -107,7 +108,7 @@ def parseOrders(orders,debug):
                 "city": format_words(addr["city"]),
                 "postal_code": formatted_postcode,
                 "country": addr["countryCode"],
-                "phone": ship_to.get("primaryPhone", {}).get("phoneNumber", ""),
+                "phone": phone_number,
                 "quantity": item.get("quantity", 0),
                 "item_title": item.get("title", "Unknown Item"),
                 "item_cost": item.get("lineItemCost", {}).get("value", "0.00"),

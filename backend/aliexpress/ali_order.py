@@ -11,6 +11,8 @@ import pycountry
 from datetime import datetime
 from get_ebay_image import get_ebay_image
 from select_ali_variant import select_variant
+from send_emails import send_failure_email, send_success_email
+from search_web import searchWeb
 
 # ---------------------------
 # Global Settings
@@ -118,10 +120,9 @@ def makeAliOrder(order_info):
         if not product_url:
             print("ERROR: ** Aliexpress URL not linked for this item **")
             break
-        # Open Page
-        sys.argv = [listing_file, product_url]
-        with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\search-web.py", "r") as script:
-            exec(script.read(), globals())
+        else:
+            # Open Page
+            searchWeb(product_url)
         
         # -----------------------
         # Select Variant (External Script)
@@ -222,7 +223,7 @@ def makeAliOrder(order_info):
         if any(n.lower().replace(" ", "") in name_ocr for n in [first_name, last_name]):
             print("Address updated")
         else:
-            fail_reason = "Address not properly updated"
+            fail_reason = "Error found in customer address"
             ship_product = False
             break
 
@@ -317,7 +318,7 @@ def makeAliOrder(order_info):
         print("Order saved to shipped_orders.json")
 
         # ---------------------------
-        # Remove from Failed Orders if Present
+        # Remove from Failed Orders if Present & Send Email
         # ---------------------------
         if os.path.exists(failed_shipments_path):
             try:
@@ -330,6 +331,11 @@ def makeAliOrder(order_info):
                     with open(failed_shipments_path, "w", encoding="utf-8") as f:
                         json.dump(updated_failed_orders, f, indent=4, ensure_ascii=False)
                     print(f"Order {order_id} removed from failed_shipments.json")
+
+                    # Send success email to recipients
+                    send_success_email(order_info,"alexsagar13@gmail.com")
+                    send_success_email(order_info,"Zacandang@gmail.com")
+
             except json.JSONDecodeError:
                 print("Error reading failed_shipments.json. Could not update failed orders.")
 
@@ -354,94 +360,19 @@ def makeAliOrder(order_info):
 
             # Save to Failed Shipments
             shipping_info["fail_reason"] = fail_reason
-            data = []
-            order_already_failed = False
-
-            if os.path.exists(failed_shipments_path):
+            try:
                 with open(failed_shipments_path, "r", encoding="utf-8") as f:
-                    try:
-                        data = json.load(f)
-                        # Check if order already exists in failed shipments
-                        order_already_failed = any(d.get("order_id") == order_id for d in data)
-                    except:
-                        pass
-
+                    data = json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                data = []
             # Only add to file and send an email if it's a new failure
-            if not order_already_failed:
+            if not any(d.get("order_id") == order_id for d in data):
                 data.append(shipping_info)
                 with open(failed_shipments_path, "w", encoding="utf-8") as f:
                     json.dump(data, f, indent=4, ensure_ascii=False)
 
-                # ---------------------------
-                # Send Email
-                # ---------------------------
-
-                email_subject = f"🚨 Order Failed: {order_id}"
-
-                email_body = f"""
-                <html>
-                <head>
-                    <style>
-                        body {{
-                            font-family: Arial, sans-serif;
-                            background-color: #f4f4f4;
-                            padding: 20px;
-                        }}
-                        .container {{
-                            max-width: 600px;
-                            background: #ffffff;
-                            padding: 20px;
-                            border-radius: 8px;
-                            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-                            text-align: center;
-                        }}
-                        h2 {{
-                            color: #d32f2f;
-                        }}
-                        p {{
-                            font-size: 16px;
-                            line-height: 1.6;
-                            text-align: left;
-                        }}
-                        .highlight {{
-                            font-weight: bold;
-                            color: #333;
-                        }}
-                        .button {{
-                            display: inline-block;
-                            padding: 10px 20px;
-                            margin: 10px 5px;
-                            font-size: 14px;
-                            color: white;
-                            text-decoration: none;
-                            border-radius: 5px;
-                        }}
-                        .ali-button {{
-                            background-color: #007bff;
-                        }}
-                        .dropvault-button {{
-                            background-color: #e72330;
-                        }}
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <p><span class="highlight">Customer:</span> {order_info.get('full_name', 'N/A')}</p>
-                        <p><span class="highlight">Failure Reason:</span> {fail_reason}</p>
-                        <p><span class="highlight">Item:</span> {order_info.get('item_title', 'N/A')}</p>
-                        <p><span class="highlight">Variant:</span> {ali_value if ali_value else 'Default'}</p>
-
-                        <p style="margin-top: 20px;">📌 <em>Please check the failed shipments log for further details.</em></p>
-
-                        <a href="{product_url if product_url else '#'}" class="button ali-button">AliExpress Item</a>
-                        <a href="https://dropvault.short.gy" class="button dropvault-button">View on DropVault</a>
-                    </div>
-                </body>
-                </html>
-                """
-                # Send email to recipients
-                pt.send_mail(email_subject, email_body, "Zacandang@gmail.com")
-                pt.send_mail(email_subject, email_body, "alexsagar13@gmail.com")
+                send_failure_email(shipping_info, "alexsagar13@gmail.com")
+                # send_failure_email(shipping_info, "Zacandang@gmail.com")
 
     if write_to_file:
         print("------\n")

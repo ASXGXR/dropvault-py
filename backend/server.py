@@ -115,5 +115,26 @@ def get_failed_shipments():
     except FileNotFoundError:
         return jsonify({"error": "File not found"}), 404
 
+# Retry failed order
+@app.route('/api/retry-order', methods=['POST'])
+def retry_failed_order():
+    data = request.get_json() or {}
+    item_id = data.get("item_id")
+    if not item_id:
+        return jsonify({"error": "Missing item_id"}), 400
+    path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
+    with open(path, "r", encoding="utf-8") as f:
+        shipments = json.load(f)
+    for shipment in shipments:
+        if shipment.get("item_id") == item_id:
+            shipment.update({k: v for k, v in data.items() if k in shipment})
+            shipment["retryOrder"] = True
+            break
+    else:
+        return jsonify({"error": "Item not found"}), 404
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(shipments, f, indent=4, ensure_ascii=False)
+    return jsonify({"success": True, "item_id": item_id})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)

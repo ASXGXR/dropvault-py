@@ -1,5 +1,6 @@
-import json
+import os
 import time
+import json
 from ebay.get_access_token import getAccessToken
 from ebay.ebay_listings import getListings
 from ebay.ebay_orders import getOrders
@@ -44,16 +45,33 @@ while True:
     for order in orders:
         makeAliOrder(order) # Run AliExpress order script
 
-    # --- STEP 5: Wait until next run, but check pause.txt file ---
+    # --- STEP 5: Wait until next run ---
     while (time.time() - start_time) < (minute_gap * 60):
-        with open(pause_dir, "r") as f:
-            if f.read().strip():  # If pause.txt has content, pause script
-                print("⏸️  Script Paused. Remove contents of pause.txt to continue.")
-                # Stay paused until pause.txt is cleared
-                while True:
-                    time.sleep(5)  # Check pause.txt every 5 seconds
-                    with open(pause_dir, "r") as pause_file:
-                        if not pause_file.read().strip():  # If pause.txt is empty, resume
-                            print("▶️  Resuming Script...\n")
-                            break
-        time.sleep(5)  # Short delay to prevent overloading the CPU
+
+        # Check pause file
+        if open(pause_dir).read().strip():
+            print("⏸️  Script Paused. Remove contents of pause.txt to continue.")
+            while open(pause_dir).read().strip():
+                time.sleep(5)
+            print("▶️  Resuming Script...\n")
+
+        # Check for retry orders
+        try:
+            path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    shipments = json.load(f)
+
+                for shipment in shipments:
+                    if shipment.get("retryOrder"):
+                        print(f"🔁 Retrying: {shipment['item_title']}")
+                        # Make sure order only tried once
+                        shipment["retryOrder"] = False
+                        with open(path, "w", encoding="utf-8") as f:
+                            json.dump(shipments, f, indent=4, ensure_ascii=False)
+                        # Make ali order
+                        makeAliOrder(shipment)
+        except Exception as e:
+            print("⚠️  Failed to process retry orders:", e)
+
+        time.sleep(5)

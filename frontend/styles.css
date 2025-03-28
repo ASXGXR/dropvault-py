@@ -3,7 +3,7 @@
 * {
   box-sizing: border-box;
 }
-h1,h2,a,p,h1,h3,body,button,input,pre {
+h1,h2,a,p,h1,h3,body,button,input,pre,span {
   background: none;
   font-family: var(--primary-font);
   margin: 0; 
@@ -716,7 +716,9 @@ a:hover {
   .shipped-item > *:nth-child(1) { width: 8%; } /* Image */
   .shipped-item > *:nth-child(2) { width: 8%; }  /* Title */
   .shipped-item > *:nth-child(5) { width: 12%; } /* Date */
+  .shipped-item > *:nth-child(6) { width: 3%; }  /* Qty */
   .shipped-item > *:nth-child(7) { display: none; } /* Price/Profit */
+  .shipped-item > *:nth-child(8) { margin-left: 0;} /* Screenshot */
 }
 
 
@@ -728,6 +730,10 @@ a:hover {
 .log-item > *:nth-child(4) { width: 5%; font-weight: 600; } /* Variant */
 .log-item > *:nth-child(5) { width: 5%; text-align: center; } /* Qty */
 .log-item > *:nth-child(6) { width: 35%; } /* Fail Reason */
+
+@media (max-width: 768px) {
+  .log-item > *:nth-child(5) { display: none; } /* Qty */
+}
 
 
 /* EBAY LISTINGS PAGE */
@@ -830,3 +836,31 @@ a:hover {
 .variant-dropdown .variant-item:hover {
   background: #f0f0f0;
 }
+
+
+.fix-modal {
+  border-radius: 8px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 999;
+  background: white;
+  width: 400px;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fix-modal label {
+  display: flex; align-items: center;
+  justify-content: space-between;
+}
+.fix-modal input {
+  padding: 8px;
+}
+
+.hidden { display: none; }
