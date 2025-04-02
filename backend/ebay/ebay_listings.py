@@ -2,8 +2,7 @@ import os
 import json
 from ebaysdk.trading import Connection as Trading
 
-with open(os.path.join(os.path.dirname(__file__), "..", "root_dir.txt")) as f:
-    root_dir = f.read().strip()
+root_dir = os.getcwd()  # Get current working directory
 base_path = rf"{root_dir}\backend\ebay"
 
 ####################

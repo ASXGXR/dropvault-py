@@ -1,16 +1,16 @@
 import os
 import time
 import json
+import pyautogui  # Import pyautogui for mouse position tracking
 from ebay.get_access_token import getAccessToken
 from ebay.ebay_listings import getListings
 from ebay.ebay_orders import getOrders
 from aliexpress.ali_order import makeAliOrder
+from aliexpress.fix_shipped_orders import compress_old_orders
 
 # --- File Paths  ---
-with open(os.path.join(os.path.dirname(__file__), "root_dir.txt")) as f:
-    root_dir = f.read().strip()
+root_dir = os.getcwd()  # Get current working directory
 ebay_dir = rf"{root_dir}\backend\ebay"
-pause_dir = rf"{root_dir}\backend\pause.txt"
 
 # --- Initial Setup ---
 print("**Starting up..")  # Show startup message
@@ -48,13 +48,17 @@ while True:
         makeAliOrder(order) # Run AliExpress order script
 
     # --- STEP 5: Wait until next run ---
+    initial_position = pyautogui.position()
     while (time.time() - start_time) < (minute_gap * 60):
 
-        # Check pause file
-        if open(pause_dir).read().strip():
-            print("⏸️  Script Paused. Remove contents of pause.txt to continue.")
-            while open(pause_dir).read().strip():
-                time.sleep(5)
+        # Pause if mouse moves
+        if pyautogui.position() != initial_position:
+            print("⏸️  Script Paused. Keep mouse still to resume.")
+            while True:
+                initial_position = pyautogui.position()
+                time.sleep(180) # Wait for 3 minutes
+                if pyautogui.position() == initial_position:
+                    break
             print("▶️  Resuming Script...\n")
 
         # Check for retry orders
@@ -77,3 +81,6 @@ while True:
             print("⚠️  Failed to process retry orders:", e)
 
         time.sleep(5)
+    
+    # --- STEP 6: Clean up old orders ---
+    compress_old_orders()

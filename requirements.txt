@@ -8,3 +8,6 @@ Pillow
 pytesseract
 pynput
 ebaysdk
+opencv-python
+flask
+flask_cors

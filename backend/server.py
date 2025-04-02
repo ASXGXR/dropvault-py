@@ -9,8 +9,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Base roots
-with open(os.path.join(os.path.dirname(__file__), "root_dir.txt")) as f:
-    root_dir = f.read().strip()
+root_dir = os.getcwd()  # Get current working directory
 aliexpress_dir = rf"{root_dir}\backend\aliexpress"
 ebay_dir = rf"{root_dir}\backend\ebay"
 

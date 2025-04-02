@@ -14,14 +14,14 @@ from select_ali_variant import select_variant
 from send_emails import send_failure_email, send_success_email
 from search_web import searchWeb
 
-with open(os.path.join(os.path.dirname(__file__), "..", "root_dir.txt")) as f:
-    root_dir = f.read().strip()
+root_dir = os.getcwd()  # Get current working directory
 
 # ---------------------------
 # Global Settings
 # ---------------------------
-wait_time = 1  # Time between clicks
+ON_LAPTOP = True  # Set to True if running on a laptop
 ctrl_key = "ctrl"
+wait_time = 1.5  # Time between clicks
 
 def makeAliOrder(order_info):
 
@@ -41,13 +41,14 @@ def makeAliOrder(order_info):
     if not (order_id):
         sys.exit("Order ID not found in order data.")
     ebay_price = float(order_info.get("item_cost",0))
+    unique_item_id = f"{order_id}_{item_id}_{order_info.get('variation_id', '')}"
 
     # File Paths
 
     shipped_orders_path = rf"{root_dir}\backend\aliexpress\shipped_orders.json"
     failed_shipments_path = rf"{root_dir}\backend\aliexpress\failed_shipments.json"
     screenshot_path = rf"{root_dir}\backend\aliexpress\shipping_screenshots"
-    screenshot_filename = f"shipping_details_{order_id}.png"
+    screenshot_filename = f"shipping_details_{unique_item_id}.png"
 
     # ---------------------------
     # Check If Already Shipped
@@ -55,7 +56,6 @@ def makeAliOrder(order_info):
     try:
         with open(shipped_orders_path, "r", encoding="utf-8") as f:
             shipped_orders = json.load(f)
-            unique_item_id = f"{order_id}_{item_id}_{order_info.get('variation_id', '')}"
             if any(order.get("unique_item_id") == unique_item_id for order in shipped_orders):
                 ship_product = False
                 write_to_file = False
@@ -148,8 +148,12 @@ def makeAliOrder(order_info):
                     rf"{root_dir}\backend\aliexpress\buttons\buy_now_ref.png",
                     confidence=0.8
                 )
-            except: pass
+                print(f"Attempting to locate button, result: {buy_now_loc}")  # Debug
+            except Exception as e:
+                print(f"Error locating button: {e}")  # Catch and print the error
+            print(f"Time elapsed: {time.time() - start_time:.2f} seconds")  # Time tracking
             time.sleep(wait_time)
+
         if buy_now_loc:
             pyautogui.click(*pyautogui.center(buy_now_loc))
             print("Clicked 'Buy now'")
@@ -223,7 +227,7 @@ def makeAliOrder(order_info):
             ship_product = False
             break
 
-        name_ocr = pt.ocr((385, 320, 1379, 558)).lower().replace(" ", "")
+        name_ocr = pt.ocr().lower().replace(" ", "")
         if any(n.lower().replace(" ", "") in name_ocr for n in [first_name, last_name]):
             print("Address updated")
         else:
@@ -252,11 +256,16 @@ def makeAliOrder(order_info):
             # find 'Total'
             result = pt.findOnPage("Total")
             if result:
-                x, y = result
-                x += 446
-                box = (x - 67, y - 20, x + 34, y + 20)
-                # screenshot = pyautogui.screenshot(region=(box[0], box[1], box[2] - box[0], box[3] - box[1]))
-                # screenshot.save("ali-price.png")
+                if ON_LAPTOP:
+                    x, y = result
+                    x += 335  # Adjusted for laptop resolution
+                    box = (x - 50, y - 15, x + 25, y + 15)  # Adjusted box dimensions
+                else:
+                    x, y = result
+                    x += 446
+                    box = (x - 67, y - 20, x + 34, y + 20)
+                screenshot = pyautogui.screenshot(region=(box[0], box[1], box[2] - box[0], box[3] - box[1]))
+                screenshot.save("ali-price.png")
                 ali_price_str = re.sub(r"[^\d.]", "", pt.ocr(box))
                 ali_price = float(ali_price_str) if ali_price_str else 0.0
                 while ali_price > ebay_price:
@@ -287,7 +296,7 @@ def makeAliOrder(order_info):
         # Close tab
         start_time = time.time()
         while time.time() < start_time + (wait_time * 7): # wait for order to process
-            if "succes" in pt.ocr((369, 297, 901, 537)).lower():
+            if "succes" in pt.ocr().lower():
                 break
             time.sleep(0.5)
         pt.hotkey(ctrl_key, "w")

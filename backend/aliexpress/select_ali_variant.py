@@ -3,7 +3,14 @@ import pyperclip
 import time
 import pytoolsx as pt
 
-wait_time = 1.1
+wait_time = 1.5
+ON_LAPTOP = True
+if ON_LAPTOP: # Laptop co-ords
+    CONSOLE_AREA = (1224, 581, 1919, 1079)
+    CONSOLE_CLICK = (1858, 980)
+else: # Desktop co-ords
+    CONSOLE_AREA = (1633, 775, 2559, 1439)
+    CONSOLE_CLICK = (2478, 1356)
 
 def select_variant(ali_value, size=""):
   
@@ -11,10 +18,12 @@ def select_variant(ali_value, size=""):
   js = f'var e = document.querySelector(\'img[alt="{ali_value}"]\'); e ? e.click() : console.error("Not found");'
   pyperclip.copy(js)
   hotkey = ('command', 'option', 'j') if os == 'mac' else ('ctrl', 'shift', 'j')
-  pyautogui.hotkey(*hotkey); time.sleep(1.5)
-  pt.clickFindOnPage("Console",area=(1633,775,2559,1439), timeout=5)
+  pyautogui.hotkey(*hotkey)
+  time.sleep(wait_time*1.5)
+  pt.clickFindOnPage("Console",area=CONSOLE_AREA, timeout=5)
   time.sleep(wait_time/2)
-  pyautogui.click(2478, 1356)
+  pyautogui.click(CONSOLE_CLICK)
+  time.sleep(wait_time/3)
   pyautogui.hotkey('command' if os == 'mac' else 'ctrl', 'v'); pyautogui.press('enter')
 
   if size:

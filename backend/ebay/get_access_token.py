@@ -11,8 +11,7 @@ CLIENT_ID = "AlexSaga-DropVaul-PRD-5deb947bc-5f49e26a"
 CLIENT_SECRET = "PRD-deb947bc0570-5952-4a60-963f-ef77"
 TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
 
-with open(os.path.join(os.path.dirname(__file__), "..", "root_dir.txt")) as f:
-    root_dir = f.read().strip()
+root_dir = os.getcwd()  # Get current working directory
 base_path = rf"{root_dir}\backend\ebay"
 
 def getAccessToken():
