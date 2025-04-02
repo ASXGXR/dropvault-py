@@ -14,6 +14,9 @@ from select_ali_variant import select_variant
 from send_emails import send_failure_email, send_success_email
 from search_web import searchWeb
 
+with open(os.path.join(os.path.dirname(__file__), "..", "root_dir.txt")) as f:
+    root_dir = f.read().strip()
+
 # ---------------------------
 # Global Settings
 # ---------------------------
@@ -41,9 +44,9 @@ def makeAliOrder(order_info):
 
     # File Paths
 
-    shipped_orders_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipped_orders.json"
-    failed_shipments_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
-    screenshot_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipping_screenshots"
+    shipped_orders_path = rf"{root_dir}\backend\aliexpress\shipped_orders.json"
+    failed_shipments_path = rf"{root_dir}\backend\aliexpress\failed_shipments.json"
+    screenshot_path = rf"{root_dir}\backend\aliexpress\shipping_screenshots"
     screenshot_filename = f"shipping_details_{order_id}.png"
 
     # ---------------------------
@@ -68,6 +71,7 @@ def makeAliOrder(order_info):
     while ship_product:
 
         print(f"------\n*NEW ORDER*")
+        print(f"Time: {datetime.now().strftime('%H:%M:%S')}")
         print(f"Order ID: {order_id}")
         print(f"Item: {order_info.get('item_title')}")
         print(f"Customer: {order_info.get('full_name')}")
@@ -75,7 +79,7 @@ def makeAliOrder(order_info):
         # -----------------------
         # Get eBay Listing
         # -----------------------
-        listing_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
+        listing_file = rf"{root_dir}\backend\ebay\listings.json"
         try:
             with open(listing_file, "r", encoding="utf-8") as file:
                 listings = json.load(file)
@@ -141,7 +145,7 @@ def makeAliOrder(order_info):
         while not buy_now_loc and time.time() - start_time < 15:
             try:
                 buy_now_loc = pyautogui.locateOnScreen(
-                    r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\buttons\buy_now_ref.png",
+                    rf"{root_dir}\backend\aliexpress\buttons\buy_now_ref.png",
                     confidence=0.8
                 )
             except: pass
@@ -271,7 +275,7 @@ def makeAliOrder(order_info):
         # Find 'Pay Now' Button
         if ship_product:
             start = time.time()
-            while (pay_now_loc := pyautogui.locateOnScreen(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\buttons\pay_now_ref.png", confidence=0.8)) is None and time.time() - start < 15:
+            while (pay_now_loc := pyautogui.locateOnScreen(rf"{root_dir}\backend\aliexpress\buttons\pay_now_ref.png", confidence=0.8)) is None and time.time() - start < 15:
                 time.sleep(wait_time)
             if pay_now_loc:
                 pyautogui.click(*pyautogui.center(pay_now_loc))
@@ -372,7 +376,7 @@ def makeAliOrder(order_info):
                     json.dump(data, f, indent=4, ensure_ascii=False)
 
                 send_failure_email(shipping_info, "alexsagar13@gmail.com")
-                # send_failure_email(shipping_info, "Zacandang@gmail.com")
+                send_failure_email(shipping_info, "Zacandang@gmail.com")
 
     if write_to_file:
         print("------\n")

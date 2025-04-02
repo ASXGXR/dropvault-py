@@ -11,8 +11,9 @@ CLIENT_ID = "AlexSaga-DropVaul-PRD-5deb947bc-5f49e26a"
 CLIENT_SECRET = "PRD-deb947bc0570-5952-4a60-963f-ef77"
 TOKEN_URL = "https://api.ebay.com/identity/v1/oauth2/token"
 
-base_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay"
-
+with open(os.path.join(os.path.dirname(__file__), "..", "root_dir.txt")) as f:
+    root_dir = f.read().strip()
+base_path = rf"{root_dir}\backend\ebay"
 
 def getAccessToken():
     token_file = os.path.join(base_path, "a_token_refresh_time.txt")

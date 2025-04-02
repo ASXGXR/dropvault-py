@@ -58,7 +58,7 @@ def send_success_email(order_info, recipient):
     </head>
     <body>
         <div class="container">
-            <h2>🎉 Failed Order Recovered & Shipped</h2>
+            <h2>🎉 Order Recovered & Shipped</h2>
             <p><span class="highlight">Customer:</span> {order_info.get('full_name', 'N/A')}</p>
             <p><span class="highlight">Item:</span> {order_info.get('item_title', 'N/A')}</p>
             <p><span class="highlight">Variant:</span> {order_info.get('ali_value', 'Default')}</p>

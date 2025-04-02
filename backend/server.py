@@ -1,21 +1,30 @@
-from flask import Flask, jsonify, Response, request
-import json
+from flask import Flask, jsonify, Response, request, send_from_directory
 from flask_cors import CORS
-from flask import send_from_directory
+import json
+import os  # Add this import for file existence checks
 
 app = Flask(__name__)
 
 # Allow requests from anywhere (TEMPORARY for debugging)
-CORS(app, resources={r"/api/*": {"origins": "*"}}) 
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-# If you want to limit access, use this instead:
-# CORS(app, resources={r"/api/*": {"origins": ["http://192.168.0.70:5500", "http://82.42.112.27:5500"]}})
+# Base roots
+with open(os.path.join(os.path.dirname(__file__), "root_dir.txt")) as f:
+    root_dir = f.read().strip()
+aliexpress_dir = rf"{root_dir}\backend\aliexpress"
+ebay_dir = rf"{root_dir}\backend\ebay"
+
+# Individual files
+shipped_orders_path = rf"{aliexpress_dir}\shipped_orders.json"
+failed_shipments_path = rf"{aliexpress_dir}\failed_shipments.json"
+shipping_screenshots_dir = rf"{aliexpress_dir}\shipping_screenshots"
+listings_path = rf"{ebay_dir}\listings.json"
 
 # Get ebay orders
 @app.route('/api/ebay-orders', methods=['GET'])
 def get_orders():
     try:
-        with open("C:/Users/44755/3507 Dropbox/Alex Sagar/WEBSITES/dropvault-py/backend/aliexpress/shipped_orders.json", "r", encoding="utf-8") as f:
+        with open(shipped_orders_path, "r", encoding="utf-8") as f:
             orders = json.load(f)
 
         # Use Response instead of jsonify to disable sorting
@@ -27,7 +36,7 @@ def get_orders():
 @app.route('/api/shipped-orders', methods=['GET'])
 def get_shipped_orders():
     try:
-        with open("C:/Users/44755/3507 Dropbox/Alex Sagar/WEBSITES/dropvault-py/backend/aliexpress/shipped_orders.json", "r", encoding="utf-8") as f:
+        with open(shipped_orders_path, "r", encoding="utf-8") as f:
             shipped_orders = json.load(f)
 
         return Response(json.dumps(shipped_orders, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
@@ -37,14 +46,13 @@ def get_shipped_orders():
 # Serve shipping screenshots
 @app.route('/api/shipping-screenshot/<path:filename>', methods=['GET'])
 def get_shipping_screenshot(filename):
-    screenshots_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipping_screenshots"
-    return send_from_directory(screenshots_dir, filename)
+    return send_from_directory(shipping_screenshots_dir, filename)
 
 # Get ebay listings
 @app.route('/api/ebay-listings', methods=['GET'])
 def get_ebay_listings():
     try:
-        with open(r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json", "r", encoding="utf-8") as f:
+        with open(listings_path, "r", encoding="utf-8") as f:
             listings = json.load(f)
 
         return Response(json.dumps(listings, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
@@ -59,8 +67,7 @@ def update_variant():
         item_id, variant_title, new_value = data.get("listingId"), data.get("variantTitle"), data.get("value")
         if not item_id or new_value is None or variant_title is None:
             return jsonify({"error": "Invalid payload"}), 400
-        path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
-        with open(path, "r", encoding="utf-8") as f:
+        with open(listings_path, "r", encoding="utf-8") as f:
             listings = json.load(f)
         for listing in listings:
             if listing.get("item_id") != item_id:
@@ -75,7 +82,7 @@ def update_variant():
             break
         else:
             return jsonify({"error": "Listing not found"}), 404
-        with open(path, "w", encoding="utf-8") as f:
+        with open(listings_path, "w", encoding="utf-8") as f:
             json.dump(listings, f, indent=4, ensure_ascii=False)
         return jsonify({"success": True, "item_id": item_id, "variant_title": variant_title, "new_value": new_value})
     except Exception as e:
@@ -89,7 +96,6 @@ def update_aliexpress():
         item_id, new_url = data.get("item_id"), data.get("aliexpress_url")
         if not item_id or new_url is None:
             return jsonify({"error": "Invalid payload"}), 400
-        listings_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay\listings.json"
         with open(listings_path, "r", encoding="utf-8") as f:
             listings = json.load(f)
         for listing in listings:
@@ -108,7 +114,6 @@ def update_aliexpress():
 @app.route('/api/failed-shipments', methods=['GET'])
 def get_failed_shipments():
     try:
-        failed_shipments_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
         with open(failed_shipments_path, "r", encoding="utf-8") as f:
             failed_shipments = json.load(f)
         return Response(json.dumps(failed_shipments, ensure_ascii=False, indent=4, sort_keys=False), mimetype="application/json")
@@ -122,8 +127,7 @@ def retry_failed_order():
     item_id = data.get("item_id")
     if not item_id:
         return jsonify({"error": "Missing item_id"}), 400
-    path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
-    with open(path, "r", encoding="utf-8") as f:
+    with open(failed_shipments_path, "r", encoding="utf-8") as f:
         shipments = json.load(f)
     for shipment in shipments:
         if shipment.get("item_id") == item_id:
@@ -132,7 +136,7 @@ def retry_failed_order():
             break
     else:
         return jsonify({"error": "Item not found"}), 404
-    with open(path, "w", encoding="utf-8") as f:
+    with open(failed_shipments_path, "w", encoding="utf-8") as f:
         json.dump(shipments, f, indent=4, ensure_ascii=False)
     return jsonify({"success": True, "item_id": item_id})
 

@@ -16,6 +16,8 @@ def update_unique_ids(file_path):
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(orders, f, indent=4)
 
-shipped_orders_file = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\shipped_orders.json"
+with open("../root_dir.txt", "r") as f:
+    root_dir = f.read().strip()
+shipped_orders_file = rf"{root_dir}\backend\aliexpress\shipped_orders.json"
 update_unique_ids(shipped_orders_file)
 print("Unique item IDs updated.")

@@ -2,13 +2,14 @@ import requests
 import json
 import re
 import os
-import string
 
 #########################
 ##  GETTING ORDERS     ##
 #########################
 
-base_path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay"
+with open(os.path.join(os.path.dirname(__file__), "..", "root_dir.txt")) as f:
+    root_dir = f.read().strip()
+base_path = rf"{root_dir}\backend\ebay"
 
 
 def getOrders(EBAY_ACCESS_TOKEN,debug):

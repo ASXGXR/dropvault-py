@@ -7,8 +7,10 @@ from ebay.ebay_orders import getOrders
 from aliexpress.ali_order import makeAliOrder
 
 # --- File Paths  ---
-ebay_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\ebay"
-pause_dir = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\pause.txt"
+with open(os.path.join(os.path.dirname(__file__), "root_dir.txt")) as f:
+    root_dir = f.read().strip()
+ebay_dir = rf"{root_dir}\backend\ebay"
+pause_dir = rf"{root_dir}\backend\pause.txt"
 
 # --- Initial Setup ---
 print("**Starting up..")  # Show startup message
@@ -57,7 +59,7 @@ while True:
 
         # Check for retry orders
         try:
-            path = r"C:\Users\44755\3507 Dropbox\Alex Sagar\WEBSITES\dropvault-py\backend\aliexpress\failed_shipments.json"
+            path = rf"{root_dir}\backend\aliexpress\failed_shipments.json"
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     shipments = json.load(f)
